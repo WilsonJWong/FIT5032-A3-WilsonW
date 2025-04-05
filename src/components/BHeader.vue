@@ -25,7 +25,7 @@
 
 <style scoped>
 ::v-deep(.nav-pills) {
-  background-color: pink !important;
+  background-color: lightpink !important;
 }
 
 ::v-deep(.nav-pills .nav-link) {
