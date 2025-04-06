@@ -3,29 +3,19 @@
     <div class="row g-0 full-height">
       <div class="col-md-4 d-flex justify-content-center align-items-center welcome-box">
         <div class="mb-3 w-100">
-          <h2 class="text-center">Welcome!</h2>
-        </div>
-        <div class="mb-3 w-100">
-          <p class="sign-up-text">
-            Don't have an account?
-            <router-link to="/Signup" class="sign-up-link">Sign up</router-link>
+          <h2 class="text-center">Reset Password !</h2>
+          <p class="sign-in-text">
+            <router-link to="/Login" class="sign-in-link">Back to login</router-link>
           </p>
         </div>
       </div>
-
       <div class="col-md-8 d-flex flex-column justify-content-center align-items-start px-5">
-        <h4 class="text-center mb-4">Please sign in to continue</h4>
+        <h4 class="text-center mb-4">Please enter your email used for the account</h4>
         <div class="mb-3 w-100">
           <input type="text" class="form-control" placeholder="Email" v-model="email" />
         </div>
-        <div class="mb-3 w-100">
-          <input type="password" class="form-control" placeholder="Password" v-model="password" />
-        </div>
         <div class="d-flex justify-content-between w-100">
-          <button class="btn btn-primary" @click="signin">Sign in</button>
-          <button class="btn btn-link forgot-btn" @click="forgotPassword">
-            Forgot username / password?
-          </button>
+          <button class="btn btn-primary" @click="sendEmail">Send reset to email</button>
         </div>
       </div>
     </div>
@@ -60,19 +50,8 @@ h2 {
 button {
   margin-top: 20px;
 }
-
-.forgot-btn {
-  align-self: flex-end;
-  margin-top: 10px;
-  color: #007bff;
-  text-decoration: none;
-}
 </style>
 
 <script setup>
-import { useRouter } from 'vue-router'
-const router = useRouter()
-const forgotPassword = () => {
-  router.push({ name: 'LoginReset' })
-}
+// No script needed for now
 </script>

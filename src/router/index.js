@@ -3,11 +3,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LandingPageView from '@/views/LandingPageView.vue'
 import CommunityView from '@/views/CommunityView.vue'
 import PublicationsView from '@/views/PublicationsView.vue'
-import ResourcesView from '@/views/ResourcesView.vue'
+import MentorsView from '@/views/MentorsView.vue'
 import LoginView from '@/views/LoginView.vue'
 import DonateView from '@/views/DonateView.vue'
 import ContactUsView from '@/views/ContactUsView.vue'
 import SignupView from '@/views/SignupView.vue'
+import LoginResetView from '@/views/LoginResetView.vue'
 
 const routes = [
   {
@@ -26,9 +27,9 @@ const routes = [
     component: PublicationsView
   },
   {
-    path: '/Resources',
-    name: 'Resources',
-    component: ResourcesView
+    path: '/Mentors',
+    name: 'Mentors',
+    component: MentorsView
   },
   {
     path: '/Login',
@@ -49,6 +50,11 @@ const routes = [
     path: '/Signup',
     name: 'Signup',
     component: SignupView
+  },
+  {
+    path: '/LoginReset',
+    name: 'LoginReset',
+    component: LoginResetView
   },
 
 ]

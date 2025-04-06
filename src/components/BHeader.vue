@@ -16,7 +16,7 @@
           >
         </li>
         <li class="nav-item flex-fill">
-          <router-link to="/Resources" class="nav-link" active-class="active">Resource</router-link>
+          <router-link to="/Mentors" class="nav-link" active-class="active">Mentors</router-link>
         </li>
       </ul>
     </header>
@@ -26,11 +26,13 @@
 <style scoped>
 ::v-deep(.nav-pills) {
   background-color: lightpink !important;
+  border-radius: 8px;
 }
 
 ::v-deep(.nav-pills .nav-link) {
   color: black !important;
   text-align: center;
+  font-weight: bold;
 }
 
 ::v-deep(.nav-pills .nav-link.active) {

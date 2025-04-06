@@ -7,7 +7,7 @@
         </div>
         <div class="mb-3 w-100">
           <p class="sign-in-text">
-            Don't have an account?
+           Have an account?
             <router-link to="/Login" class="sign-in-link">Sign in</router-link>
           </p>
         </div>
