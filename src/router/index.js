@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import LandingPageView from '@/views/LandingPageView.vue'
-import CommunityView from '@/views/CommunityView.vue'
+import JobSearchView from '@/views/JobSearchView.vue'
 import PublicationsView from '@/views/PublicationsView.vue'
 import MentorsView from '@/views/MentorsView.vue'
 import LoginView from '@/views/LoginView.vue'
@@ -17,11 +17,6 @@ const routes = [
     component: LandingPageView
   },
   {
-    path: '/Community',
-    name: 'Community',
-    component: CommunityView
-  },
-  {
     path: '/Publications',
     name: 'Publications',
     component: PublicationsView
@@ -30,6 +25,11 @@ const routes = [
     path: '/Mentors',
     name: 'Mentors',
     component: MentorsView
+  },
+  {
+    path: '/JobSearch',
+    name: 'JobSearch',
+    component: JobSearchView
   },
   {
     path: '/Login',

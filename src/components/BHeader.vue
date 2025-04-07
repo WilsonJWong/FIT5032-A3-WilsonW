@@ -6,17 +6,17 @@
           <router-link to="/" class="nav-link" active-class="active">About Us</router-link>
         </li>
         <li class="nav-item flex-fill">
-          <router-link to="/Community" class="nav-link" active-class="active"
-            >Community</router-link
-          >
-        </li>
-        <li class="nav-item flex-fill">
           <router-link to="/Publications" class="nav-link" active-class="active"
             >Publications</router-link
           >
         </li>
         <li class="nav-item flex-fill">
           <router-link to="/Mentors" class="nav-link" active-class="active">Mentors</router-link>
+        </li>
+        <li class="nav-item flex-fill">
+          <router-link to="/JobSearch" class="nav-link" active-class="active"
+            >Job Search</router-link
+          >
         </li>
       </ul>
     </header>
