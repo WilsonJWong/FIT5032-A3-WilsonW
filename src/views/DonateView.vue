@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="col-md-12 d-flex flex-column align-items-center welcome-box">
         <div class="mb-3 w-100 text-center">
-          <h2>Donation Form</h2>
+          <h2>Donation form</h2>
         </div>
 
         <div class="thick-line"></div>
@@ -19,7 +19,7 @@
                 type="text"
                 v-model="amount"
                 class="form-control"
-                :class="{'is-invalid': amountError}"
+                :class="{ 'is-invalid': amountError }"
                 @blur="validateAmount"
               />
               <div v-if="amountError" class="invalid-feedback">{{ amountErrorMessage }}</div>
@@ -29,12 +29,15 @@
               <select
                 v-model="frequency"
                 class="form-control"
+                :class="{ 'is-invalid': frequencyError }"
+                @change="validateFrequency"
               >
                 <option value="">Select Frequency</option>
                 <option value="once off">Once off</option>
                 <option value="monthly">Monthly</option>
                 <option value="annually">Annually</option>
               </select>
+              <div v-if="frequencyError" class="invalid-feedback">{{ frequencyErrorMessage }}</div>
             </div>
           </div>
         </div>
@@ -49,7 +52,7 @@
                 type="text"
                 v-model="name"
                 class="form-control"
-                :class="{'is-invalid': nameError}"
+                :class="{ 'is-invalid': nameError }"
                 @blur="validateName"
               />
               <div v-if="nameError" class="invalid-feedback">{{ nameErrorMessage }}</div>
@@ -60,7 +63,7 @@
                 type="email"
                 v-model="email"
                 class="form-control"
-                :class="{'is-invalid': emailError}"
+                :class="{ 'is-invalid': emailError }"
                 @blur="validateEmail"
               />
               <div v-if="emailError" class="invalid-feedback">{{ emailErrorMessage }}</div>
@@ -77,7 +80,7 @@
               type="text"
               v-model="cardOwner"
               class="form-control"
-              :class="{'is-invalid': cardOwnerError}"
+              :class="{ 'is-invalid': cardOwnerError }"
               @blur="validateCardOwner"
             />
             <div v-if="cardOwnerError" class="invalid-feedback">{{ cardOwnerErrorMessage }}</div>
@@ -88,7 +91,7 @@
               type="text"
               v-model="cardNumber"
               class="form-control"
-              :class="{'is-invalid': cardNumberError}"
+              :class="{ 'is-invalid': cardNumberError }"
               @blur="validateCardNumber"
             />
             <div v-if="cardNumberError" class="invalid-feedback">
@@ -103,10 +106,12 @@
                 type="text"
                 v-model="expiryDate"
                 class="form-control"
-                :class="{'is-invalid': expiryDateError}"
+                :class="{ 'is-invalid': expiryDateError }"
                 @blur="validateExpiryDate"
               />
-              <div v-if="expiryDateError" class="invalid-feedback">{{ expiryDateErrorMessage }}</div>
+              <div v-if="expiryDateError" class="invalid-feedback">
+                {{ expiryDateErrorMessage }}
+              </div>
             </div>
             <div class="col-md-6">
               <label>Card CVV:</label>
@@ -114,7 +119,7 @@
                 type="text"
                 v-model="cvv"
                 class="form-control"
-                :class="{'is-invalid': cvvError}"
+                :class="{ 'is-invalid': cvvError }"
                 @blur="validateCvv"
               />
               <div v-if="cvvError" class="invalid-feedback">{{ cvvErrorMessage }}</div>
@@ -124,12 +129,14 @@
 
         <!-- Button to pay-->
         <div class="d-flex justify-content-center w-100">
+          <div v-if="inquiryError" class="invalid-feedback">{{ inquiryErrorMessage }}</div>
           <button
-            class="btn custom-btn"
-            @click="sendEmail"
+            class="custom-btn"
+            :class="{ 'custom-btn-active': !isFormInvalid, 'custom-btn-disabled': isFormInvalid }"
             :disabled="isFormInvalid"
+            @click="sendEmail"
           >
-            Pay Now
+            Submit
           </button>
         </div>
       </div>
@@ -164,9 +171,14 @@ const expiryDateError = ref(false)
 const expiryDateErrorMessage = ref('')
 const cvvError = ref(false)
 const cvvErrorMessage = ref('')
+const frequencyError = ref(false)
+const frequencyErrorMessage = ref('')
 
 const validateAmount = () => {
-  if (isNaN(amount.value)) {
+  if (!amount.value.trim()) {
+    amountError.value = true
+    amountErrorMessage.value = 'Amount is required'
+  } else if (isNaN(amount.value)) {
     amountError.value = true
     amountErrorMessage.value = 'Amount must be a number'
   } else if (Number(amount.value) <= 0) {
@@ -178,10 +190,20 @@ const validateAmount = () => {
   }
 }
 
+const validateFrequency = () => {
+  if (!frequency.value) {
+    frequencyError.value = true
+    frequencyErrorMessage.value = 'Frequency must be selected'
+  } else {
+    frequencyError.value = false
+    frequencyErrorMessage.value = ''
+  }
+}
+
 const validateName = () => {
   if (!name.value.trim()) {
     nameError.value = true
-    nameErrorMessage.value = 'Name cannot be empty'
+    nameErrorMessage.value = 'Name is required'
   } else if (!/^[A-Za-z\s]+$/.test(name.value)) {
     nameError.value = true
     nameErrorMessage.value = 'Name must only contain alphabets'
@@ -192,7 +214,7 @@ const validateName = () => {
 }
 
 const validateEmail = () => {
-  if (!email.value) {
+  if (!email.value.trim()) {
     emailError.value = true
     emailErrorMessage.value = 'Email is required'
   } else if (!/\S+@\S+\.\S+/.test(email.value)) {
@@ -207,7 +229,7 @@ const validateEmail = () => {
 const validateCardOwner = () => {
   if (!cardOwner.value.trim()) {
     cardOwnerError.value = true
-    cardOwnerErrorMessage.value = 'Card owner name cannot be empty'
+    cardOwnerErrorMessage.value = 'Card owner name is required'
   } else if (!/^[A-Za-z\s]+$/.test(cardOwner.value)) {
     cardOwnerError.value = true
     cardOwnerErrorMessage.value = 'Card owner name must only contain alphabets'
@@ -220,7 +242,11 @@ const validateCardOwner = () => {
 const validateCardNumber = () => {
   cardNumberNonNumericError.value = false
   cardNumberLengthError.value = false
-  if (!/^\d+$/.test(cardNumber.value)) {
+  if (!cardNumber.value.trim()) {
+    cardNumberError.value = true
+    cardNumberNonNumericError.value = false
+    cardNumberLengthError.value = false
+  } else if (!/^\d+$/.test(cardNumber.value)) {
     cardNumberNonNumericError.value = true
     cardNumberError.value = true
   } else if (cardNumber.value.length !== 16) {
@@ -236,20 +262,32 @@ const validateCardNumber = () => {
 const validateExpiryDate = () => {
   expiryDateError.value = false
   expiryDateErrorMessage.value = ''
-  if (!/^\d{2}\/\d{2}$/.test(expiryDate.value)) {
+  if (!expiryDate.value.trim()) {
+    expiryDateError.value = true
+    expiryDateErrorMessage.value = 'Expiry date is required'
+  }
+  else if (!/^\d{2}\/\d{2}$/.test(expiryDate.value)) {
     expiryDateError.value = true
     expiryDateErrorMessage.value = 'Expiry date must be in MM/YY format'
-  } else {
+  }
+  else {
     const [month, year] = expiryDate.value.split('/').map((el) => el.trim())
     if (month < 1 || month > 12) {
       expiryDateError.value = true
       expiryDateErrorMessage.value = 'Month must be between 01 and 12'
     }
+    else if (year.length !== 2) {
+      expiryDateError.value = true
+      expiryDateErrorMessage.value = 'Year must be exactly two digits'
+    }
   }
 }
 
 const validateCvv = () => {
-  if (cvv.value.length !== 3 || !/^\d+$/.test(cvv.value)) {
+  if (!cvv.value.trim()) {
+    cvvError.value = true
+    cvvErrorMessage.value = 'CVV is required'
+  } else if (cvv.value.length !== 3 || !/^\d+$/.test(cvv.value)) {
     cvvError.value = true
     cvvErrorMessage.value = 'CVV must be 3 digits long'
   } else {
@@ -260,15 +298,16 @@ const validateCvv = () => {
 
 const isFormInvalid = computed(() => {
   return !(
-    amount.value &&
+    amount.value.trim() &&
     frequency.value &&
-    name.value &&
-    email.value &&
-    cardOwner.value &&
-    cardNumber.value &&
-    expiryDate.value &&
-    cvv.value &&
+    name.value.trim() &&
+    email.value.trim() &&
+    cardOwner.value.trim() &&
+    cardNumber.value.trim() &&
+    expiryDate.value.trim() &&
+    cvv.value.trim() &&
     !amountError.value &&
+    !frequencyError.value &&
     !nameError.value &&
     !emailError.value &&
     !cardOwnerError.value &&
@@ -279,7 +318,7 @@ const isFormInvalid = computed(() => {
 })
 
 const sendEmail = () => {
-  alert("Form submitted!")
+  alert('Form submitted!')
 }
 </script>
 
@@ -287,8 +326,8 @@ const sendEmail = () => {
 .thick-line {
   height: 5px;
   background-color: black;
-  width: 99%;
-  margin-bottom:50px;
+  width: 100%;
+  margin-bottom: 50px;
 }
 
 .form-section {
@@ -306,24 +345,26 @@ label {
 }
 
 .custom-btn {
-  background-color: darkorange;
-  color: white;
+  background-color: orange;
   border: none;
+  padding: 8px 16px;
+  color: white;
+  border-radius: 10px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
   width: 99%;
-  padding: 15px;
-  text-align: center;
 }
+
+.custom-btn-active {
+  background-color: orange;
+}
+
+.custom-btn-disabled {
+  background-color: grey;
+  cursor: not-allowed;
+}
+
 .custom-btn:hover {
   background-color: darkorange;
-  color: white;
-}
-
-.is-invalid {
-  border-color: red;
-}
-
-.invalid-feedback {
-  color: red;
-  font-size: 0.9rem;
 }
 </style>

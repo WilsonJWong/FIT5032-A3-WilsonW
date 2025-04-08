@@ -23,17 +23,13 @@
 
     <!-- Job Cards Box -->
     <div class="job-cards-box px-3 py-4 mt-2">
-
       <!-- Title Row -->
       <div class="row job-card mb-2">
         <div class="col role-title text-center">
           <strong>Role</strong>
         </div>
-        <div class="col location-title text-center">
-          <strong>Location</strong>
-        </div>
-        <div class="col employ-title text-center">
-          <strong>Contract</strong>
+        <div class="col background-title text-center">
+          <strong>Background</strong>
         </div>
         <div class="col desc-title text-center">
           <strong>Description</strong>
@@ -48,11 +44,9 @@
         <div class="col role-box text-center">
           {{ job.role }}
         </div>
-        <div class="col location-box text-center">
-          {{ job.location }}
-        </div>
-        <div class="col employ-box text-center">
-          {{ job.employ }}
+        <div class="col background-box text-center">
+          <div class="location-line"><strong>Location:</strong> {{ job.location }}</div>
+          <div class="contract-line"><strong>Contract:</strong> {{ job.employ }}</div>
         </div>
         <div class="col desc-box">
           <p class="mb-1">{{ job.description }}</p>
@@ -69,7 +63,7 @@
       </div>
     </div>
 
-    <!-- Pagination Controls -->
+    <!-- Pages -->
     <div class="Page-controls text-center mt-4">
       <button class="btn btn-primary" @click="prevPage" :disabled="currentPage === 1">
         Previous
@@ -81,7 +75,6 @@
     </div>
   </div>
 </template>
-
 
 <script setup>
 import { ref, computed } from 'vue'
@@ -190,12 +183,10 @@ const jobs = ref([
   },
 ])
 
-// Filter jobs based on search bar
 const filteredJobs = computed(() =>
   jobs.value.filter((job) => job.role.toLowerCase().includes(searchQuery.value.toLowerCase())),
 )
 
-// Sort the filtered jobs
 const sortJobs = () => {
   if (sortOption.value === 'location') {
     jobs.value.sort((a, b) => a.location.localeCompare(b.location))
@@ -213,19 +204,16 @@ const paginatedJobs = computed(() => {
   return filteredJobs.value.slice(startIndex, endIndex)
 })
 
-// Calculate total number of pages
 const totalPages = computed(() => {
   return Math.ceil(filteredJobs.value.length / jobsPerPage)
 })
 
-// Go to the next page
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
   }
 }
 
-// Go to the previous page
 const prevPage = () => {
   if (currentPage.value > 1) {
     currentPage.value--
@@ -286,20 +274,21 @@ const prevPage = () => {
 }
 
 .job-card .role-title,
-.job-card .location-title,
-.job-card .employ-title,
+.job-card .background-title,
 .job-card .desc-title,
 .job-card .apply-title {
   background-color: #db0ffa94;
   color: white;
+  margin-bottom: 15px;
+  min-width: 20%;
 }
 
 .job-card {
   background-color: transparent;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   display: flex;
   flex-wrap: nowrap;
-  gap: 15px;
+  gap: 10px;
 }
 
 .job-card .col {
@@ -314,26 +303,39 @@ const prevPage = () => {
 }
 
 .role-box,
-.location-box,
-.employ-box,
+.background-box,
 .desc-box,
-.apply-box {
+.apply-box
+{
   background-color: #f7e3fa94;
-  min-width: 5%;
+  min-width: 20%;
 }
 
-.role-box, .role-title {
+.role-box,
+.role-title {
   flex: 1;
   margin-left: 20px;
 }
 
-.location-box,.location-title,
-.employ-box, .employ-title {
-  flex: 0.5;
+.background-box,
+.background-title {
+  flex: 1;
 }
 
-.desc-title{
-  flex:7;
+.background-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.location-line,
+.contract-line {
+  margin: 5px 0;
+}
+
+.desc-title {
+  flex: 7;
 }
 
 .desc-box {
@@ -371,7 +373,8 @@ const prevPage = () => {
   text-overflow: ellipsis;
 }
 
-.apply-box, .apply-title {
+.apply-box,
+.apply-title {
   padding: 0;
   border: none;
   margin-right: 20px;

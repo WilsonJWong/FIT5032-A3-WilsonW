@@ -5,32 +5,36 @@
       <strong>Mentors hub</strong>
     </div>
 
-    <!-- Job Search Bar -->
-    <div class="search-bar d-flex align-items-center mb-2">
-      <i class="bi bi-funnel-fill me-2 text-purple icon-box"></i>
-      <i class="bi bi-search me-2 text-purple"></i>
+    <!-- Search Bar -->
+    <div class="search-bar d-flex align-items-center my-4 px-3">
       <input
-        v-model="searchQuery"
         type="text"
-        class="form-control me-3"
-        placeholder="🔍 Search for a consellor..."
+        v-model="searchQuery"
+        placeholder="🔍 Search for a position"
+        class="form-control"
       />
+      <select v-model="sortOption" class="sort-select">
+        <option value="name">Sort by name</option>
+        <option value="occupation">Sort by occupation</option>
+        <option value="expertise">Sort by expertise</option>
+      </select>
+      <button class="sort-btn" @click="sortPersons">Sort</button>
     </div>
 
-    <!-- List of persons -->
+    <!-- List -->
     <div class="content-area px-3 py-4">
       <div
         v-for="person in filteredPersons"
         :key="person.id"
         class="person-row d-flex align-items-center mb-4"
       >
-        <!-- Left Icon + Name -->
+        <!-- Left -->
         <div class="left-section text-center me-3">
           <img :src="getImageUrl(person.image)" alt="Person" class="person-icon mb-2" />
           <div>{{ person.name }}</div>
         </div>
 
-        <!-- Middle Info Box -->
+        <!-- Middle -->
         <div class="middle-section flex-grow-1">
           <div class="info-box">
             <p><strong>Occupation:</strong> {{ person.occupation }}</p>
@@ -39,13 +43,13 @@
           </div>
         </div>
 
-        <!-- Right Connect -->
+        <!-- Right -->
         <div class="right-section text-center ms-3">
           <button class="connect-btn">Click to connect</button>
         </div>
       </div>
 
-      <!-- No match message -->
+      <!-- No match -->
       <div v-if="filteredPersons.length === 0" class="text-center">
         <em>No matches found.</em>
       </div>
@@ -54,40 +58,56 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const searchQuery = ref('')
+const sortOption = ref('occupation')
 
-const persons = [
+const persons = ref([
   {
     id: 1,
     name: 'Jessie Mendoca',
-    occupation: 'xxx',
-    expertise: 'xxx',
-    description: 'Description',
+    occupation: 'Career Coach',
+    expertise: 'Financial Advisory',
+    description: 'Specializes in transitioning into tech roles.',
     image: 'Picture1.png',
   },
   {
     id: 2,
-    name: 'Harry Balthormore',
-    occupation: 'xxx',
-    expertise: 'xxx',
-    description: 'Description',
+    name: 'James Peterson',
+    occupation: 'Academic Advisor',
+    expertise: 'STEM Education',
+    description: 'Guides students through STEM career paths.',
     image: 'Picture2.png',
   },
   {
     id: 3,
-    name: 'James Peterson',
-    occupation: 'xxx',
-    expertise: 'xxx',
-    description: 'Description',
+    name: 'Harry Balthormore',
+    occupation: 'Mental Health Counselor',
+    expertise: 'Youth Development',
+    description: 'Helps young adults build emotional resilience.',
     image: 'Picture3.png',
   },
-]
+])
 
-const filteredPersons = computed(() => {
-  return persons.filter((p) => p.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+const sortedPersons = ref([])
+
+const sortPersons = () => {
+  sortedPersons.value = [...persons.value].sort((a, b) =>
+    a[sortOption.value].localeCompare(b[sortOption.value])
+  )
+}
+
+// Automatically sort on load
+onMounted(() => {
+  sortPersons()
 })
+
+const filteredPersons = computed(() =>
+  sortedPersons.value.filter((p) =>
+    p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+)
 
 const getImageUrl = (filename) => {
   return new URL(`../assets/${filename}`, import.meta.url).href
@@ -142,11 +162,10 @@ const getImageUrl = (filename) => {
   padding: 10px 20px;
 }
 
-.search-section {
-  background-color: #ffeeee;
-  width: 99%;
-  margin: auto;
-  border-radius: 8px;
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .search-bar input {
@@ -154,7 +173,25 @@ const getImageUrl = (filename) => {
   border: 2px solid #d29fe8;
   border-radius: 20px;
   padding: 5px 15px;
-  margin-top: 1rem;
+}
+
+.sort-select {
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.sort-btn {
+  background-color: #a065d0;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  background-color: #8c56b0;
 }
 
 .text-purple {

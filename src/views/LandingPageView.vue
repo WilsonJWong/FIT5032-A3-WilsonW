@@ -106,6 +106,7 @@
   border: 2px solid red;
   border-radius: 20px;
   padding: 20px;
+  margin-top: 10px;
   margin-left: 10px;
   margin-right: 10px;
   display: flex;
@@ -114,7 +115,7 @@
 }
 
 .title-box {
-  margin-bottom: 10px; /* Add spacing between title and description */
+  margin-bottom: 10px;
 }
 
 .col-md-5 {
