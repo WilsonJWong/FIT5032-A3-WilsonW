@@ -7,32 +7,85 @@
 
     <div class="profile-section px-3 py-4">
       <div class="d-flex flex-column align-items-center text-center">
-
         <!-- User Icon -->
         <div class="user-icon mb-3">
           <p>🤘</p>
         </div>
 
         <!-- User's Name -->
-        <h5 class="mb-3">{{ displayName || 'Guest User' }}</h5>
+        <h5 class="profile-name mb-3">
+          <strong>{{ displayName || 'Guest User' }}</strong>
+        </h5>
         <button class="btn btn-danger mb-4" @click="logout">Logout</button>
 
         <!-- Information box -->
         <div class="info-card p-3 w-100 w-md-75 w-lg-50">
+          <h5 class="info-title">User Information</h5>
           <p><strong>Email:</strong> {{ email }}</p>
           <p><strong>Gender:</strong> {{ gender }}</p>
           <p><strong>Status:</strong> {{ status }}</p>
+        </div>
+
+        <!-- Donation Information -->
+        <div
+          class="donation-card p-3 w-100 w-md-75 w-lg-50 mt-4"
+        >
+          <h5>Donation History</h5>
+
+          <!-- Donation Search and Sort -->
+          <div class="search-bar d-flex align-items-center my-4 px-3">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="🔍Search by Amount, Frequency or Date"
+              class="form-control"
+            />
+            <select v-model="sortOption" class="sort-select">
+              <option value="amount">Sort by Amount (↓)</option>
+              <option value="frequency">Sort by Frequency (↓)</option>
+              <option value="createdAt">Sort by Donation Date (↓)</option>
+            </select>
+            <button class="sort-btn" @click="sortDonations">Sort</button>
+          </div>
+
+          <div v-for="(donation, index) in paginatedDonations" :key="index" class="donation-item">
+            <div class="donation-box">
+              <div class="donation-detail"><strong>Amount:</strong> ${{ donation.amount }}</div>
+              <div class="donation-detail">
+                <strong>Frequency:</strong> {{ donation.frequency }}
+              </div>
+              <div class="donation-detail">
+                <strong>Donated on:</strong>
+                {{ new Date(donation.createdAt.seconds * 1000).toLocaleDateString() }}
+              </div>
+            </div>
+          </div>
+
+          <!-- No match message -->
+          <div v-if="filteredDonations.length === 0" class="text-center mt-3">
+            <p>No donations found.</p>
+          </div>
+        </div>
+
+        <!-- Pages -->
+        <div class="Page-controls text-center mt-4">
+          <button class="btn btn-primary" @click="prevPage" :disabled="currentPage === 1">
+            Previous
+          </button>
+          <span class="mx-2">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button class="btn btn-primary" @click="nextPage" :disabled="currentPage === totalPages">
+            Next
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { getAuth, signOut } from 'firebase/auth'
 import { useRouter } from 'vue-router'
-import { ref, onMounted } from 'vue'
-import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { ref, computed, onMounted } from 'vue'
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
 
 const auth = getAuth()
 const db = getFirestore()
@@ -42,6 +95,12 @@ const email = ref('')
 const displayName = ref('')
 const gender = ref('')
 const status = ref('')
+const donations = ref([])
+
+const searchQuery = ref('')
+const sortOption = ref('amount')
+const currentPage = ref(1)
+const donationsPerPage = 10
 
 onMounted(async () => {
   const user = auth.currentUser
@@ -49,7 +108,6 @@ onMounted(async () => {
   if (user) {
     email.value = user.email
 
-    // Get user data from Firestore
     const userDocRef = doc(db, 'users', user.uid)
     const userDocSnap = await getDoc(userDocRef)
 
@@ -61,6 +119,11 @@ onMounted(async () => {
     } else {
       console.warn('User data not found in Firestore.')
     }
+
+    const donationsQuery = query(collection(db, 'Donations'), where('donorEmail', '==', user.email))
+
+    const querySnapshot = await getDocs(donationsQuery)
+    donations.value = querySnapshot.docs.map((doc) => doc.data())
   } else {
     router.push('/Login')
   }
@@ -71,6 +134,51 @@ const logout = () => {
     router.push('/Login')
   })
 }
+
+const filteredDonations = computed(() => {
+  return donations.value.filter((donation) => {
+    const searchLower = searchQuery.value.toLowerCase()
+    return (
+      donation.amount.toString().includes(searchLower) ||
+      donation.frequency.toLowerCase().includes(searchLower) ||
+      new Date(donation.createdAt.seconds * 1000).toLocaleDateString().includes(searchLower)
+    )
+  })
+})
+
+const sortDonations = () => {
+  if (sortOption.value === 'amount') {
+    donations.value.sort((a, b) => b.amount - a.amount)
+  } else if (sortOption.value === 'frequency') {
+    const frequencyOrder = ['once off', 'monthly', 'annually']
+    donations.value.sort((a, b) => frequencyOrder.indexOf(a.frequency) - frequencyOrder.indexOf(b.frequency))
+  } else if (sortOption.value === 'createdAt') {
+    donations.value.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)
+  }
+}
+
+
+const paginatedDonations = computed(() => {
+  const startIndex = (currentPage.value - 1) * donationsPerPage
+  const endIndex = currentPage.value * donationsPerPage
+  return filteredDonations.value.slice(startIndex, endIndex)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredDonations.value.length / donationsPerPage)
+})
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
 </script>
 
 <style scoped>
@@ -79,7 +187,7 @@ const logout = () => {
 }
 
 .profile-section {
-  background-color: #f2f2ff;
+  background-color: #ffeeee;
   border-top: 2px solid red;
   border-bottom: 2px solid red;
   min-height: 70vh;
@@ -89,26 +197,93 @@ const logout = () => {
   width: 120px;
   height: 120px;
   background-color: #fff;
-  border: 3px solid red;
+  border: 3px solid orange;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: red;
-  box-shadow: 0 0 10px rgba(0, 0, 255, 0.1);
   font-size: 3.5rem;
+}
+
+.profile-name {
+  color: orange;
 }
 
 .info-card {
   background-color: #ffffff;
-  border: 2px solid red;
+  border: 2px solid;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 255, 0.1);
   text-align: left;
+}
+
+.info-title {
+  text-align: center;
+  margin-bottom: 15px;
 }
 
 .info-card p {
   font-size: 1.1rem;
   margin-bottom: 10px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-bar input {
+  flex-grow: 1;
+  border: 2px solid #d29fe8;
+  border-radius: 20px;
+  padding: 5px 15px;
+}
+
+.sort-select {
+  padding: 5px;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.sort-btn {
+  background-color: #a065d0;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.sort-btn:hover {
+  background-color: #8c56b0;
+}
+
+.donation-card {
+  background-color: white;
+  border: 2px solid;
+  border-radius: 10px;
+}
+
+.donation-item {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.donation-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.donation-detail strong {
+  margin-right: 5px;
+}
+
+.Page-controls {
+  margin-bottom: 20px;
 }
 </style>

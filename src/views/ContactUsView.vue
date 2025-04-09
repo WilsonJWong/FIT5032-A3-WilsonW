@@ -1,11 +1,13 @@
 <template>
   <div class="container-fluid p-0 m-0">
+
     <!-- Inquiry Form -->
     <div class="text-center fw-bold title-box"> <h2>Inquiry form</h2></div>
     <div class="thick-line w-100"></div>
 
     <div class="inquiry-section px-3 py-4">
       <div class="row align-items-center">
+
         <!-- Left fields -->
         <div class="col-md-3">
           <div class="mb-2">
@@ -67,16 +69,17 @@
 
     <!-- Contact & Location Section -->
     <div class="row contact-location-row px-3 py-4">
+
       <!-- Persons of Contact -->
       <div class="col-md-6 border-end contact-col">
         <div class="section-title text-center mb-3">Persons of contact</div>
         <div
           v-for="contact in contacts"
           :key="contact.id"
-          class="d-flex align-items-center mb-3 contact-card-wrapper"
+          class="person-card d-flex align-items-center mb-3 contact-card-wrapper"
         >
           <div class="text-center me-3">
-            <small>{{ contact.label }}</small>
+            <strong><small>{{ contact.label }}</small></strong>
           </div>
           <div class="contact-card">
             <p><strong>Email:</strong> {{ contact.email }}</p>
@@ -105,8 +108,8 @@
 import { ref, computed } from 'vue'
 
 const contacts = [
-  { id: 1, label: 'Contact 1:', email: 'wont.stop@ASRC.com.au', phone: '0446 235 848' },
-  { id: 2, label: 'Contact 2:', email: 'bob.smith@ASRC.com.au', phone: '0412 987 654' },
+  { id: 1, label: 'Deanh O. (Operations Manager):', email: 'wont.stop@ASRC.com.au', phone: '0446 235 848' },
+  { id: 2, label: 'Olive D. (Program Coordinator):', email: 'bob.smith@ASRC.com.au', phone: '0412 987 654' },
 ]
 
 const email = ref('')

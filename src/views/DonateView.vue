@@ -1,6 +1,7 @@
 <template>
   <div class="container-fluid p-0 m-0">
     <div class="row g-0 full-height">
+
       <!-- Header -->
       <div class="col-md-12 d-flex flex-column align-items-center welcome-box">
         <div class="mb-3 w-100 text-center">
@@ -146,7 +147,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, collection, addDoc } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
 const db = getFirestore()
@@ -328,13 +329,15 @@ const sendEmail = async () => {
       alert('Please ensure donation form has been filled out correctly')
       return
     }
-    await setDoc(doc(db, 'Donations', email.value), {
+
+    const docRef = await addDoc(collection(db, 'Donations'), {
       donorEmail: email.value,
       amount: amount.value,
       frequency: frequency.value,
       createdAt: new Date(),
     })
-    console.log('Firebase Register Successful!')
+
+    console.log('Donation Submitted Successfully!', docRef.id)
     resetForm()
   } catch (error) {
     console.error('Error submitting donation:', error.code, error.message)

@@ -2,6 +2,7 @@
   <div class="container-fluid p-0 m-0">
     <div class="row px-3 py-4">
       <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4" v-for="card in cards" :key="card.id">
+
         <div class="info-card">
           <!-- Title -->
           <h6 class="card-title text-danger fw-bold">{{ card.title }}</h6>

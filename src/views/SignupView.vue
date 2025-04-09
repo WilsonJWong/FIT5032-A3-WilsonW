@@ -127,6 +127,7 @@ const signUp = async () => {
     alert(error.message)
   }
 }
+
 </script>
 
 <style scoped>

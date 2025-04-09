@@ -72,13 +72,12 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const auth = getAuth()
-  const user = auth.currentUser // Get the current authenticated user
+  const user = auth.currentUser
 
-  // If the route requires authentication and the user isn't logged in, redirect to Login
   if (to.matched.some(record => record.meta.requiresAuth) && !user) {
-    next({ name: 'Login' }) // Redirect to Login
+    next({ name: 'Login' })
   } else {
-    next() // Continue to the requested route
+    next()
   }
 })
 
