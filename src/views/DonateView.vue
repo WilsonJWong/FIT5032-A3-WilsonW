@@ -145,7 +145,12 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
+
+const db = getFirestore()
+const auth = getAuth()
 
 const amount = ref('')
 const frequency = ref('')
@@ -317,10 +322,63 @@ const isFormInvalid = computed(() => {
   )
 })
 
-const sendEmail = () => {
-  alert('Form submitted!')
+const sendEmail = async () => {
+  try {
+    if (isFormInvalid.value) {
+      alert('Please ensure donation form has been filled out correctly')
+      return
+    }
+    await setDoc(doc(db, 'Donations', email.value), {
+      donorEmail: email.value,
+      amount: amount.value,
+      frequency: frequency.value,
+      createdAt: new Date(),
+    })
+    console.log('Firebase Register Successful!')
+    resetForm()
+  } catch (error) {
+    console.error('Error submitting donation:', error.code, error.message)
+    alert(error.message)
+  }
 }
+
+const resetForm = () => {
+  amount.value = ''
+  frequency.value = ''
+  name.value = ''
+  email.value = ''
+  cardOwner.value = ''
+  cardNumber.value = ''
+  expiryDate.value = ''
+  cvv.value = ''
+  amountError.value = false
+  nameError.value = false
+  emailError.value = false
+  cardOwnerError.value = false
+  cardNumberError.value = false
+  expiryDateError.value = false
+  cvvError.value = false
+  frequencyError.value = false
+}
+
+onMounted(async () => {
+  const user = auth.currentUser
+
+  if (user) {
+    const userDocRef = doc(db, 'users', user.uid)
+    const userDocSnap = await getDoc(userDocRef)
+
+    if (userDocSnap.exists()) {
+      const userData = userDocSnap.data()
+      email.value = user.email || ''
+      name.value = `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
+    } else {
+      console.warn('User data not found in Firestore.')
+    }
+  }
+})
 </script>
+
 
 <style>
 .thick-line {
@@ -353,6 +411,7 @@ label {
   font-weight: bold;
   transition: background-color 0.3s ease;
   width: 99%;
+  margin-bottom:20px;
 }
 
 .custom-btn-active {

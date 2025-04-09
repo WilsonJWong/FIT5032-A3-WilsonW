@@ -32,6 +32,38 @@
   </div>
 </template>
 
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+
+const router = useRouter()
+const email = ref('')
+const password = ref('')
+const auth = getAuth()
+
+const signin = () => {
+  if (!email.value || !password.value) {
+    alert('Please enter both email and password.')
+    return
+  }
+
+  signInWithEmailAndPassword(auth, email.value, password.value)
+    .then((userCredential) => {
+      console.log('Firebase Login Successful!', userCredential.user)
+      router.push('/Profile')
+    })
+    .catch((error) => {
+      console.error('Login error:', error.code, error.message)
+      alert('Login failed: ' + error.message)
+    })
+}
+
+const forgotPassword = () => {
+  router.push({ name: 'LoginReset' })
+}
+</script>
+
 <style scoped>
 .full-height {
   min-height: 100vh;
@@ -68,11 +100,3 @@ button {
   text-decoration: none;
 }
 </style>
-
-<script setup>
-import { useRouter } from 'vue-router'
-const router = useRouter()
-const forgotPassword = () => {
-  router.push({ name: 'LoginReset' })
-}
-</script>
