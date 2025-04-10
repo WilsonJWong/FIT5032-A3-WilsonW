@@ -8,10 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "start": "node server.js"
   },
   "dependencies": {
     "@primevue/themes": "^4.3.3",
+    "axios": "^1.8.4",
     "bootstrap": "^5.3.5",
     "cors": "^2.8.5",
     "express": "^5.1.0",
