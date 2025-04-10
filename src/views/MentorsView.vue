@@ -10,27 +10,28 @@
       <input
         type="text"
         v-model="searchQuery"
-        placeholder="🔍 Search for a position"
+        placeholder="🔍 Search for a mentor, occupation, expertise, or description"
         class="form-control"
       />
       <select v-model="sortOption" class="sort-select">
-        <option value="name">Sort by name</option>
-        <option value="occupation">Sort by occupation</option>
-        <option value="expertise">Sort by expertise</option>
+        <option value="name">Sort by name (↓)</option>
+        <option value="occupation">Sort by occupation (↓)</option>
+        <option value="expertise">Sort by expertise (↓)</option>
+        <option value="rating">Sort by rating (↓)</option>
       </select>
-      <button class="sort-btn" @click="sortPersons">Sort</button>
+      <button class="sort-btn" @click="sortMentors">Sort</button>
     </div>
 
     <!-- List -->
     <div class="content-area px-3 py-4">
       <div
-        v-for="person in filteredPersons"
+        v-for="person in paginatedMentors"
         :key="person.id"
         class="person-row d-flex align-items-center mb-4"
       >
         <!-- Left -->
         <div class="left-section text-center me-3">
-          <img :src="getImageUrl(person.image)" alt="Person" class="person-icon mb-2" />
+          <div class="person-icon mb-2">{{ person.name.charAt(0) }}</div>
           <div>{{ person.name }}</div>
         </div>
 
@@ -39,80 +40,156 @@
           <div class="info-box">
             <p><strong>Occupation:</strong> {{ person.occupation }}</p>
             <p><strong>Field of expertise:</strong> {{ person.expertise }}</p>
+            <p><strong>Rating:</strong> {{ person.rating.toFixed(2) }} / 5</p>
+            <p><strong>Contact:</strong> {{ person.phone }}</p>
             <p>{{ person.description }}</p>
           </div>
+          <button class="review-btn" @click="openReviewModal(person)">Rate</button>
         </div>
 
-        <!-- Right -->
-        <div class="right-section text-center ms-3">
-          <button class="connect-btn">Click to connect</button>
+        <!-- Popup review -->
+        <div
+          v-if="isReviewModalOpen && selectedMentor.id === person.id"
+          class="review-modal-overlay"
+        >
+          <div class="review-modal">
+            <h4>Rate {{ selectedMentor?.name }}</h4>
+            <div class="rating">
+              <button v-for="n in 5" :key="n" @click="submitReview(n)" class="rating-btn">
+                {{ n }}
+              </button>
+            </div>
+            <button @click="closeReviewModal" class="close-btn">Close</button>
+          </div>
         </div>
       </div>
 
       <!-- No match -->
-      <div v-if="filteredPersons.length === 0" class="text-center">
+      <div v-if="filteredMentors.length === 0" class="text-center">
         <em>No matches found.</em>
       </div>
+    </div>
+
+    <!-- Pages -->
+    <div class="Page-controls text-center mt-4">
+      <button class="btn btn-primary" @click="prevPage" :disabled="currentPage === 1">
+        Previous
+      </button>
+      <span class="mx-2">Page {{ currentPage }} of {{ totalPages }}</span>
+      <button class="btn btn-primary" @click="nextPage" :disabled="currentPage === totalPages">
+        Next
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 
 const searchQuery = ref('')
-const sortOption = ref('occupation')
+const sortOption = ref('name')
+const mentors = ref([])
+const isReviewModalOpen = ref(false)
+const selectedMentor = ref(null)
+const db = getFirestore()
 
-const persons = ref([
-  {
-    id: 1,
-    name: 'Jessie Mendoca',
-    occupation: 'Career Coach',
-    expertise: 'Financial Advisory',
-    description: 'Specializes in transitioning into tech roles.',
-    image: 'Picture1.png',
-  },
-  {
-    id: 2,
-    name: 'James Peterson',
-    occupation: 'Academic Advisor',
-    expertise: 'STEM Education',
-    description: 'Guides students through STEM career paths.',
-    image: 'Picture2.png',
-  },
-  {
-    id: 3,
-    name: 'Harry Balthormore',
-    occupation: 'Mental Health Counselor',
-    expertise: 'Youth Development',
-    description: 'Helps young adults build emotional resilience.',
-    image: 'Picture3.png',
-  },
-])
-
-const sortedPersons = ref([])
-
-const sortPersons = () => {
-  sortedPersons.value = [...persons.value].sort((a, b) =>
-    a[sortOption.value].localeCompare(b[sortOption.value])
-  )
+const fetchMentors = async () => {
+  const querySnapshot = await getDocs(collection(db, 'mentors'))
+  mentors.value = querySnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 }
 
-// Automatically sort on load
 onMounted(() => {
-  sortPersons()
+  fetchMentors()
 })
 
-const filteredPersons = computed(() =>
-  sortedPersons.value.filter((p) =>
-    p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  )
-)
+const sortMentors = () => {
+  if (sortOption.value === 'rating') {
+    mentors.value.sort((a, b) => b.rating - a.rating)
+  } else {
+    mentors.value.sort((a, b) => a[sortOption.value].localeCompare(b[sortOption.value]))
+  }
+}
 
-const getImageUrl = (filename) => {
-  return new URL(`../assets/${filename}`, import.meta.url).href
+const filteredMentors = computed(() => {
+  const query = String(searchQuery.value).toLowerCase()
+  return mentors.value.filter(
+    (mentor) =>
+      mentor.name.toLowerCase().includes(query) ||
+      mentor.occupation.toLowerCase().includes(query) ||
+      mentor.expertise.toLowerCase().includes(query) ||
+      mentor.description.toLowerCase().includes(query) ||
+      mentor.phone.includes(query),
+  )
+})
+
+const currentPage = ref(1)
+const mentorsPerPage = 10
+
+const paginatedMentors = computed(() => {
+  const startIndex = (currentPage.value - 1) * mentorsPerPage
+  const endIndex = currentPage.value * mentorsPerPage
+  return filteredMentors.value.slice(startIndex, endIndex)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredMentors.value.length / mentorsPerPage)
+})
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+const openReviewModal = (mentor) => {
+  selectedMentor.value = mentor
+  isReviewModalOpen.value = true
+}
+
+const closeReviewModal = () => {
+  isReviewModalOpen.value = false
+  selectedMentor.value = null
+}
+
+import { getDoc } from 'firebase/firestore'
+
+const submitReview = async (rating) => {
+  if (selectedMentor.value) {
+    const mentorRef = doc(db, 'mentors', selectedMentor.value.id)
+    const mentorDoc = await getDoc(mentorRef)
+
+    if (mentorDoc.exists()) {
+      const currentMentorData = mentorDoc.data()
+      const currentRating = currentMentorData.rating || 0
+      const currentReviewsCount = currentMentorData.totalReviews || 0
+      const newReviewsCount = currentReviewsCount + 1
+      const newRating = (currentRating * currentReviewsCount + rating) / newReviewsCount
+
+      await updateDoc(mentorRef, {
+        rating: newRating,
+        totalReviews: newReviewsCount,
+      })
+
+      await fetchMentors()
+
+      closeReviewModal()
+    } else {
+      console.error('Mentor document not found')
+    }
+  }
 }
 </script>
+
 
 <style scoped>
 .header-bar {
@@ -136,14 +213,29 @@ const getImageUrl = (filename) => {
 }
 
 .left-section {
-  width: 100px;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .person-icon {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  object-fit: cover;
+  background-color: #a065d0;
+  color: white;
+  font-size: 1.5rem;
+  line-height: 60px;
+  font-weight: bold;
+}
+
+.middle-section {
+  flex-grow: 1;
+  margin: 0 15px;
+  padding: 10px;
 }
 
 .info-box {
@@ -153,13 +245,16 @@ const getImageUrl = (filename) => {
   background-color: white;
 }
 
-.connect-btn {
+.review-btn {
+  width: 100%;
+  flex-grow: 1;
+  margin: 5px 0;
   background-color: orange;
   color: white;
   font-weight: bold;
   border: none;
   border-radius: 20px;
-  padding: 10px 20px;
+  padding: 10px;
 }
 
 .search-bar {
@@ -194,7 +289,60 @@ const getImageUrl = (filename) => {
   background-color: #8c56b0;
 }
 
+.review-btn {
+  margin-top: 10px;
+}
+
 .text-purple {
   color: #a065d0;
+}
+
+.review-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.review-modal {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  text-align: center;
+}
+
+.rating-btn {
+  margin: 5px;
+  padding: 10px;
+  background-color: #a065d0;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.rating-btn:hover {
+  background-color: #8c56b0;
+}
+
+.close-btn {
+  margin-top: 15px;
+  background-color: #e48d8d;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background-color: #d38c8c;
 }
 </style>

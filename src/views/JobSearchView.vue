@@ -10,7 +10,7 @@
       <input
         type="text"
         v-model="searchQuery"
-        placeholder="🔍Search for a position"
+        placeholder="🔍Search for a position, employment contract, location or description"
         class="form-control"
       />
       <select v-model="sortOption" class="sort-select">
@@ -21,45 +21,49 @@
       <button class="sort-btn" @click="sortJobs">Sort</button>
     </div>
 
-    <!-- Job Cards Box -->
+    <!-- Job Cards or Messages -->
     <div class="job-cards-box px-3 py-4 mt-2">
-      <!-- Title Row -->
-      <div class="row job-card mb-2">
-        <div class="col role-title text-center">
-          <strong>Role</strong>
-        </div>
-        <div class="col background-title text-center">
-          <strong>Background</strong>
-        </div>
-        <div class="col desc-title text-center">
-          <strong>Description</strong>
-        </div>
-        <div class="col apply-title text-center">
-          <strong>Apply</strong>
-        </div>
+
+      <!-- Conditional Rendering Based on Login and Status -->
+      <div v-if="!isLoggedIn">
+        <p class="text-center"><strong>Please log in to view available jobs.</strong></p>
       </div>
 
-      <!-- Job Cards -->
-      <div v-for="job in paginatedJobs" :key="job.id" class="row job-card mb-4">
-        <div class="col role-box text-center">
-          {{ job.role }}
-        </div>
-        <div class="col background-box text-center">
-          <div class="location-line"><strong>Location:</strong> {{ job.location }}</div>
-          <div class="contract-line"><strong>Contract:</strong> {{ job.employ }}</div>
-        </div>
-        <div class="col desc-box">
-          <p class="mb-1">{{ job.description }}</p>
-          <a href="#" class="view-more">Click to view more</a>
-        </div>
-        <div class="col apply-box text-center">
-          <button class="apply-btn">Apply</button>
-        </div>
+      <div v-else-if="userStatus === 'Australian Citizen'">
+        <p class="text-center">
+          <strong>
+            We regret to inform you that these job opportunities are part of a program targeted
+            specifically for refugees and asylum seekers supported by ASRC.
+          </strong>
+        </p>
       </div>
 
-      <!-- No match message -->
-      <div v-if="paginatedJobs.length === 0" class="text-center mt-3">
-        <em>No jobs found.</em>
+      <div v-else>
+        <!-- Title Row -->
+        <div class="row job-card mb-2">
+          <div class="col role-title text-center"><strong>Role</strong></div>
+          <div class="col desc-title text-center"><strong>Description</strong></div>
+          <div class="col apply-title text-center"><strong>Apply</strong></div>
+        </div>
+
+        <!-- Job Cards -->
+        <div v-for="job in paginatedJobs" :key="job.id" class="row job-card mb-4">
+          <div class="col role-box text-center">{{ job.role }}</div>
+          <div class="col desc-box">
+            <p><strong>Contract:</strong> {{ job.employ }}</p>
+            <p><strong>Location:</strong> {{ job.location }}</p>
+            <p class="mt-2 mb-1">{{ job.description }}</p>
+            <a href="#" class="view-more">Click to view more</a>
+          </div>
+          <div class="col apply-box text-center">
+            <button class="apply-btn">Apply</button>
+          </div>
+        </div>
+
+        <!-- No match message -->
+        <div v-if="paginatedJobs.length === 0" class="text-center mt-3">
+          <em>No jobs found.</em>
+        </div>
       </div>
     </div>
 
@@ -77,12 +81,35 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import { getFirestore, doc, getDoc } from 'firebase/firestore'
 
 const searchQuery = ref('')
 const sortOption = ref('role')
 const currentPage = ref(1)
 const jobsPerPage = 10
+
+const auth = getAuth()
+const db = getFirestore()
+
+const isLoggedIn = ref(false)
+const userStatus = ref(null)
+
+onMounted(() => {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      isLoggedIn.value = true
+      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      if (userDoc.exists()) {
+        userStatus.value = userDoc.data().status
+      }
+    } else {
+      isLoggedIn.value = false
+      userStatus.value = null
+    }
+  })
+})
 
 const jobs = ref([
   {
@@ -183,9 +210,16 @@ const jobs = ref([
   },
 ])
 
-const filteredJobs = computed(() =>
-  jobs.value.filter((job) => job.role.toLowerCase().includes(searchQuery.value.toLowerCase())),
-)
+const filteredJobs = computed(() => {
+  const query = searchQuery.value.toLowerCase()
+  return jobs.value.filter(
+    (job) =>
+      job.role.toLowerCase().includes(query) ||
+      job.employ.toLowerCase().includes(query) ||
+      job.location.toLowerCase().includes(query) ||
+      job.description.toLowerCase().includes(query),
+  )
+})
 
 const sortJobs = () => {
   if (sortOption.value === 'location') {
@@ -274,13 +308,12 @@ const prevPage = () => {
 }
 
 .job-card .role-title,
-.job-card .background-title,
 .job-card .desc-title,
 .job-card .apply-title {
   background-color: #db0ffa94;
   color: white;
   margin-bottom: 15px;
-  min-width: 20%;
+  min-width: 18%;
 }
 
 .job-card {
@@ -303,35 +336,16 @@ const prevPage = () => {
 }
 
 .role-box,
-.background-box,
 .desc-box,
-.apply-box
-{
+.apply-box {
   background-color: #f7e3fa94;
-  min-width: 20%;
+  min-width: 18%;
 }
 
 .role-box,
 .role-title {
   flex: 1;
   margin-left: 20px;
-}
-
-.background-box,
-.background-title {
-  flex: 1;
-}
-
-.background-box {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.location-line,
-.contract-line {
-  margin: 5px 0;
 }
 
 .desc-title {
@@ -358,7 +372,7 @@ const prevPage = () => {
   color: black;
   text-decoration: underline;
   align-self: flex-end;
-  margin-top: auto;
+  margin-top: 10px;
 }
 
 .apply-btn {

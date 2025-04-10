@@ -1,16 +1,3 @@
-
-<script setup>
-import BHeader from './components/BHeader.vue'
-import { ref, onMounted } from 'vue'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
-const auth = getAuth()
-const isLoggedIn = ref(false)
-onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
-    isLoggedIn.value = user !== null
-  })
-})
-</script>
 <template>
   <div class="main-controller">
     <header class="logo-container">
@@ -55,6 +42,19 @@ onMounted(() => {
     </main>
   </div>
 </template>
+
+<script setup>
+import BHeader from './components/BHeader.vue'
+import { ref, onMounted } from 'vue'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
+const auth = getAuth()
+const isLoggedIn = ref(false)
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    isLoggedIn.value = user !== null
+  })
+})
+</script>
 
 <style scoped>
 header {
