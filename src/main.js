@@ -6,12 +6,13 @@ import router from './router'
 import PrimeVue from 'primevue/config'
 import Aura from '@primevue/themes/aura'
 
-import { db, auth } from './firebase/init.js'
+import { db, auth } from './Firebase/init.js'
 
 const app = createApp(App)
+
 app.use(PrimeVue, { theme: { preset: Aura } })
 app.use(router)
 
 app.mount('#app')
 
-
+export { db, auth };
