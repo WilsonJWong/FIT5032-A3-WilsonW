@@ -161,35 +161,34 @@ const closeReviewModal = () => {
   selectedMentor.value = null
 }
 
-import { getDoc } from 'firebase/firestore'
+import axios from 'axios';
 
 const submitReview = async (rating) => {
   if (selectedMentor.value) {
-    const mentorRef = doc(db, 'mentors', selectedMentor.value.id)
-    const mentorDoc = await getDoc(mentorRef)
+    const mentorId = selectedMentor.value.id;
 
-    if (mentorDoc.exists()) {
-      const currentMentorData = mentorDoc.data()
-      const currentRating = currentMentorData.rating || 0
-      const currentReviewsCount = currentMentorData.totalReviews || 0
-      const newReviewsCount = currentReviewsCount + 1
-      const newRating = (currentRating * currentReviewsCount + rating) / newReviewsCount
+    try {
+      console.log('Sending review:', { mentorId, rating });
+      const response = await axios.post('https://submitreview-ulawfedg4a-uc.a.run.app', {
+        mentorId,
+        rating,
+      });
 
-      await updateDoc(mentorRef, {
-        rating: newRating,
-        totalReviews: newReviewsCount,
-      })
-
-      await fetchMentors()
-
-      closeReviewModal()
-    } else {
-      console.error('Mentor document not found')
+      if (response.status === 200) {
+        console.log('Review submitted successfully');
+        await fetchMentors();
+        closeReviewModal();
+      } else {
+        console.error('Error submitting review:', response.data);
+      }
+    } catch (error) {
+      console.error('Error submitting review via axios:', error.response || error.message);
     }
   }
-}
-</script>
+};
 
+
+</script>
 
 <style scoped>
 .header-bar {

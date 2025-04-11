@@ -70,6 +70,7 @@ const router = createRouter({
   routes: routes
 })
 
+
 router.beforeEach((to, from, next) => {
   const auth = getAuth()
   const user = auth.currentUser

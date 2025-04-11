@@ -32,6 +32,8 @@
         >
           <h5>Donation History</h5>
 
+          <button class="btn btn-primary" @click="exportToPDF">Export to PDF</button>
+
           <!-- Donation Search and Sort -->
           <div class="search-bar d-flex align-items-center my-4 px-3">
             <input
@@ -86,6 +88,7 @@ import { getAuth, signOut } from 'firebase/auth'
 import { useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
+import { jsPDF } from 'jspdf'
 
 const auth = getAuth()
 const db = getFirestore()
@@ -179,6 +182,29 @@ const prevPage = () => {
     currentPage.value--
   }
 }
+
+
+
+const exportToPDF = () => {
+  const doc = new jsPDF()
+
+  const donationsData = filteredDonations.value.map(donation => ({
+    Amount: donation.amount,
+    Frequency: donation.frequency,
+    DonatedOn: new Date(donation.createdAt.seconds * 1000).toLocaleDateString(),
+  }))
+
+  doc.text('Donation History', 10, 10)
+
+  donationsData.forEach((donation, index) => {
+    const yPosition = 20 + (index * 10)
+    doc.text(`Amount: $${donation.Amount}, Frequency: ${donation.Frequency}, Donated On: ${donation.DonatedOn}`, 10, yPosition)
+  })
+
+  doc.save('donations.pdf')
+}
+
+
 </script>
 
 <style scoped>
