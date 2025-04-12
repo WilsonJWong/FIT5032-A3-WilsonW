@@ -14,9 +14,9 @@
         class="form-control"
       />
       <select v-model="sortOption" class="sort-select">
-        <option value="role">Sort by Role</option>
-        <option value="location">Sort by Location</option>
-        <option value="employ">Sort by Employment</option>
+        <option value="role">Sort by Role (↓)</option>
+        <option value="location">Sort by Location (↓)</option>
+        <option value="employ">Sort by Employment (↓)</option>
       </select>
       <button class="sort-btn" @click="sortJobs">Sort</button>
     </div>

@@ -2,8 +2,13 @@
   <div class="container-fluid my-5 px-4">
     <!-- Mission & Vision section -->
     <div class="row mb-5 align-items-center">
-      <div class="col-md-4">
-        <img src="../assets/Background.png" alt="Mission" class="img-fluid w-100" />
+      <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
+        <div class="text-center">
+          <img src="../assets/Background.png" alt="Mission" class="img-fluid centered-image" />
+          <span class="profile-label d-block mt-2"
+            >[Picture of people from different walks of life]</span
+          >
+        </div>
       </div>
       <div class="col-md-8">
         <h5 class="section-title">Our mission & vision</h5>
@@ -120,5 +125,11 @@
 
 .col-md-5 {
   flex: 45%;
+}
+
+.profile-label {
+  font-size: 1rem;
+  color: black;
+  user-select: none;
 }
 </style>

@@ -186,8 +186,6 @@ const submitReview = async (rating) => {
     }
   }
 };
-
-
 </script>
 
 <style scoped>

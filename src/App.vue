@@ -105,7 +105,6 @@ h1 {
   font-size: 0.9rem;
   margin-top: 0.3rem;
   color: black;
-  user-select: none;
 }
 
 .icon {

@@ -1,7 +1,6 @@
 <template>
   <div class="container-fluid p-0 m-0">
     <div class="row g-0 full-height">
-
       <!-- Header -->
       <div class="col-md-12 d-flex flex-column align-items-center welcome-box">
         <div class="mb-3 w-100 text-center">
@@ -140,6 +139,15 @@
             Submit
           </button>
         </div>
+
+        <!-- Thankyou message-->
+        <div v-if="showThankYouPopup" class="thank-you-popup">
+          <div class="popup-content">
+            <h3>Thank you for your donation!</h3>
+            <p>Your donation has been successfully submitted.</p>
+            <button @click="closeThankYouPopup">Close</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -179,6 +187,8 @@ const cvvError = ref(false)
 const cvvErrorMessage = ref('')
 const frequencyError = ref(false)
 const frequencyErrorMessage = ref('')
+
+const showThankYouPopup = ref(false)
 
 const validateAmount = () => {
   if (!amount.value.trim()) {
@@ -271,18 +281,15 @@ const validateExpiryDate = () => {
   if (!expiryDate.value.trim()) {
     expiryDateError.value = true
     expiryDateErrorMessage.value = 'Expiry date is required'
-  }
-  else if (!/^\d{2}\/\d{2}$/.test(expiryDate.value)) {
+  } else if (!/^\d{2}\/\d{2}$/.test(expiryDate.value)) {
     expiryDateError.value = true
     expiryDateErrorMessage.value = 'Expiry date must be in MM/YY format'
-  }
-  else {
+  } else {
     const [month, year] = expiryDate.value.split('/').map((el) => el.trim())
     if (month < 1 || month > 12) {
       expiryDateError.value = true
       expiryDateErrorMessage.value = 'Month must be between 01 and 12'
-    }
-    else if (year.length !== 2) {
+    } else if (year.length !== 2) {
       expiryDateError.value = true
       expiryDateErrorMessage.value = 'Year must be exactly two digits'
     }
@@ -338,6 +345,7 @@ const sendEmail = async () => {
     })
 
     console.log('Donation Submitted Successfully!', docRef.id)
+    showThankYouPopup.value = true
     resetForm()
   } catch (error) {
     console.error('Error submitting donation:', error.code, error.message)
@@ -380,8 +388,12 @@ onMounted(async () => {
     }
   }
 })
-</script>
 
+const closeThankYouPopup = () => {
+  showThankYouPopup.value = false
+}
+
+</script>
 
 <style>
 .thick-line {
@@ -414,7 +426,7 @@ label {
   font-weight: bold;
   transition: background-color 0.3s ease;
   width: 99%;
-  margin-bottom:20px;
+  margin-bottom: 20px;
 }
 
 .custom-btn-active {
@@ -429,4 +441,39 @@ label {
 .custom-btn:hover {
   background-color: darkorange;
 }
+
+.thank-you-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.popup-content button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: orange;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.popup-content button:hover {
+  background-color: darkorange;
+}
+
 </style>
