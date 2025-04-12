@@ -26,10 +26,22 @@
             </div>
           </div>
           <div class="col-12 col-md-2 d-flex justify-content-center">
-            <div class="d-flex gap-3">
-              <img src="@/assets/language.png" alt="Language" class="image" />
-              <router-link :to="isLoggedIn ? '/Profile' : '/Login'">
-                <img src="@/assets/profile.png" alt="Profile" class="image" />
+            <div class="d-flex gap-3 align-items-end">
+              <!-- Language block -->
+              <div class="d-flex flex-column align-items-center">
+                <img src="@/assets/language.png" alt="Language" class="icon" />
+                <span class="profile-label">[Language]</span>
+              </div>
+
+              <!-- Profile block -->
+              <router-link
+                :to="isLoggedIn ? '/Profile' : '/Login'"
+                class="text-center text-decoration-none"
+              >
+                <div class="d-flex flex-column align-items-center">
+                  <img src="@/assets/profile.png" alt="Profile" class="icon" />
+                  <span class="profile-label">[{{ isLoggedIn ? 'Profile' : 'Login' }}]</span>
+                </div>
               </router-link>
             </div>
           </div>
@@ -87,5 +99,18 @@ h1 {
 .image {
   width: 60px;
   height: auto;
+}
+
+.profile-label {
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+  color: black;
+  user-select: none;
+}
+
+.icon {
+  width: 60px;
+  height: 60px;
+  object-fit: contain; /* Keeps aspect ratio cleanly */
 }
 </style>
