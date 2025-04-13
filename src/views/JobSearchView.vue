@@ -100,26 +100,25 @@ const auth = getAuth()
 const db = getFirestore()
 
 /* Fetch jobs from firestore */
-onMounted(async () => {
-  const querySnapshot = await getDocs(collection(db, 'Jobs'))
-  jobs.value = querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-  }))
-
+onMounted(() => {
   onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    isLoggedIn.value = true
-    const userDocRef = doc(db, 'users', user.uid)
-    const userDocSnap = await getDoc(userDocRef)
-    if (userDocSnap.exists()) {
-      userStatus.value = userDocSnap.data().status
+    if (user) {
+      isLoggedIn.value = true
+      const userDocRef = doc(db, 'users', user.uid)
+      const userDocSnap = await getDoc(userDocRef)
+      if (userDocSnap.exists()) {
+        userStatus.value = userDocSnap.data().status
+      }
+    } else {
+      isLoggedIn.value = false
+      userStatus.value = null
     }
-  } else {
-    isLoggedIn.value = false
-    userStatus.value = null
-  }
-})
+    const querySnapshot = await getDocs(collection(db, 'Jobs'))
+    jobs.value = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+  })
 })
 
 /* Filter jobs */
