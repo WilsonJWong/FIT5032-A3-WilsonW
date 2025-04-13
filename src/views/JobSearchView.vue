@@ -23,6 +23,7 @@
 
     <!-- Job Cards or Messages -->
     <div class="job-cards-box px-3 py-4 mt-2">
+
       <!-- Conditional Rendering Based on Login and Status -->
       <div v-if="!isLoggedIn">
         <p class="text-center"><strong>Please log in to view available jobs.</strong></p>
@@ -82,7 +83,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import { getFirestore, collection, getDocs } from 'firebase/firestore'
+import { doc, getFirestore, collection, getDoc, getDocs } from 'firebase/firestore'
 
 /* Declarations*/
 const searchQuery = ref('')
@@ -101,23 +102,24 @@ const db = getFirestore()
 /* Fetch jobs from firestore */
 onMounted(async () => {
   const querySnapshot = await getDocs(collection(db, 'Jobs'))
-  jobs.value = querySnapshot.docs.map((doc) => ({
+  jobs.value = querySnapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),
   }))
 
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      isLoggedIn.value = true
-      const userDoc = await getDocs(db, 'users', user.uid)
-      if (userDoc.exists()) {
-        userStatus.value = userDoc.data().status
-      }
-    } else {
-      isLoggedIn.value = false
-      userStatus.value = null
+  if (user) {
+    isLoggedIn.value = true
+    const userDocRef = doc(db, 'users', user.uid)
+    const userDocSnap = await getDoc(userDocRef)
+    if (userDocSnap.exists()) {
+      userStatus.value = userDocSnap.data().status
     }
-  })
+  } else {
+    isLoggedIn.value = false
+    userStatus.value = null
+  }
+})
 })
 
 /* Filter jobs */
@@ -168,6 +170,7 @@ const prevPage = () => {
 </script>
 
 <style scoped>
+
 /* Header */
 .header-bar {
   background-color: #e48d8d;
@@ -313,4 +316,5 @@ const prevPage = () => {
 .Page-controls {
   margin-bottom: 20px;
 }
+
 </style>
