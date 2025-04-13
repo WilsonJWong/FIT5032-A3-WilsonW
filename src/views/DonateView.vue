@@ -3,7 +3,7 @@
     <div class="row g-0 full-height">
       <!-- Header -->
       <div class="col-md-12 d-flex flex-column align-items-center welcome-box">
-        <div class="mb-3 w-100 text-center">
+        <div class="mb-3 w-100 text-center title-box">
           <h2>Donation form</h2>
         </div>
 
@@ -396,6 +396,12 @@ const closeThankYouPopup = () => {
 </script>
 
 <style>
+
+.title-box {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
 .thick-line {
   height: 5px;
   background-color: black;

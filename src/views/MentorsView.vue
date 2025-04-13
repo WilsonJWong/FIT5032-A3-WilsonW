@@ -85,7 +85,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { getFirestore, collection, getDocs} from 'firebase/firestore'
 
 const searchQuery = ref('')
 const sortOption = ref('name')
