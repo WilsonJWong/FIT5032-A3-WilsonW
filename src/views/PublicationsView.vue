@@ -26,53 +26,27 @@
 </template>
 
 <script setup>
-const cards = [
-  {
-    id: 1,
-    title: 'Blog & news updates',
-    description: 'Stay updated with the latest news and trends in the world of blogging.',
-  },
-  {
-    id: 2,
-    title: 'Legal & immigration guides',
-    description: 'Find important legal advice and immigration guidelines for your journey.',
-  },
-  {
-    id: 3,
-    title: 'Mental health & well-being articles',
-    description: 'Learn about mental health awareness and tips for maintaining well-being.',
-  },
-  {
-    id: 4,
-    title: 'Business & career development tips',
-    description: 'Explore articles about career growth and business strategies.',
-  },
-  {
-    id: 5,
-    title: 'Education scholarship & financial aid',
-    description: 'Get information on scholarships and financial aid opportunities.',
-  },
-  {
-    id: 6,
-    title: 'Tech & innovation news',
-    description: 'Stay informed about the latest in technology and innovations.',
-  },
-  {
-    id: 7,
-    title: 'Mentorship programs',
-    description: 'Discover various mentorship programs to guide your professional growth.',
-  },
-  {
-    id: 8,
-    title: 'Fitness & wellness tips',
-    description: 'Find tips for staying fit and living a healthy, balanced life.',
-  },
-  {
-    id: 9,
-    title: 'Parenting & child development',
-    description: 'Learn about parenting strategies and child development stages.',
-  },
-]
+
+// Imports
+import { ref, onMounted } from 'vue'
+import { getFirestore, collection, onSnapshot } from 'firebase/firestore'
+
+// Declarations
+const db = getFirestore()
+const cards = ref([])
+
+// Fetch data
+onMounted(() => {
+  const publicationsRef = collection(db, 'Publications')
+
+  onSnapshot(publicationsRef, (snapshot) => {
+    cards.value = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      title: doc.data().title,
+      description: doc.data().description,
+    }))
+  })
+})
 </script>
 
 <style scoped>

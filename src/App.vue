@@ -1,5 +1,7 @@
 <template>
   <div class="main-controller">
+
+    <!-- Logo and navigation section -->
     <header class="logo-container">
       <div class="container">
         <div class="row align-items-center">
@@ -27,6 +29,7 @@
           </div>
           <div class="col-12 col-md-2 d-flex justify-content-center">
             <div class="d-flex gap-3 align-items-end">
+
               <!-- Language block -->
               <div class="d-flex flex-column align-items-center">
                 <img src="@/assets/language.png" alt="Language" class="icon" />
@@ -48,7 +51,11 @@
         </div>
       </div>
     </header>
-    <header><BHeader></BHeader></header>
+
+    <!-- BHeader component -->
+    <BHeader />
+
+    <!-- Main content section -->
     <main class="main-box">
       <router-view></router-view>
     </main>
@@ -59,8 +66,10 @@
 import BHeader from './components/BHeader.vue'
 import { ref, onMounted } from 'vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
+
 const auth = getAuth()
 const isLoggedIn = ref(false)
+
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     isLoggedIn.value = user !== null
@@ -69,17 +78,23 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+/* Header */
 header {
   width: 100%;
 }
+
 .logo {
   max-width: 200px;
   height: auto;
 }
+
 h1 {
   font-size: 2rem;
   margin: 0;
 }
+
+/* Navigation box*/
 .donate-box,
 .contact-us-box {
   background-color: white;
@@ -91,16 +106,14 @@ h1 {
   align-items: center;
   text-align: center;
 }
+
 .donate-box p,
 .contact-us-box p {
   color: #333;
   margin: 0;
 }
-.image {
-  width: 60px;
-  height: auto;
-}
 
+/* Profile and icon */
 .profile-label {
   font-size: 0.9rem;
   margin-top: 0.3rem;
@@ -110,6 +123,6 @@ h1 {
 .icon {
   width: 60px;
   height: 60px;
-  object-fit: contain; /* Keeps aspect ratio cleanly */
+  object-fit: contain;
 }
 </style>

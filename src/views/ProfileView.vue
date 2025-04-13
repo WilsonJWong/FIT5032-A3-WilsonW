@@ -27,9 +27,7 @@
         </div>
 
         <!-- Donation Information -->
-        <div
-          class="donation-card p-3 w-100 w-md-75 w-lg-50 mt-4"
-        >
+        <div class="donation-card p-3 w-100 w-md-75 w-lg-50 mt-4">
           <h5>Donation History</h5>
 
           <button class="btn btn-primary" @click="exportToPDF">Export to PDF</button>
@@ -58,7 +56,7 @@
               </div>
               <div class="donation-detail">
                 <strong>Donated on:</strong>
-                {{ new Date(donation.createdAt.seconds * 1000).toLocaleDateString() }}
+                {{ formatDate(donation.createdAt) }}
               </div>
             </div>
           </div>
@@ -83,13 +81,17 @@
     </div>
   </div>
 </template>
+
 <script setup>
+
+/* Imports */
 import { getAuth, signOut } from 'firebase/auth'
 import { useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { jsPDF } from 'jspdf'
 
+/* Declarations */
 const auth = getAuth()
 const db = getFirestore()
 const router = useRouter()
@@ -98,13 +100,16 @@ const email = ref('')
 const displayName = ref('')
 const gender = ref('')
 const status = ref('')
+
 const donations = ref([])
 
 const searchQuery = ref('')
 const sortOption = ref('amount')
+
 const currentPage = ref(1)
 const donationsPerPage = 10
 
+/* Fetch user and donations */
 onMounted(async () => {
   const user = auth.currentUser
 
@@ -132,12 +137,14 @@ onMounted(async () => {
   }
 })
 
+/* Logout handler */
 const logout = () => {
   signOut(auth).then(() => {
     router.push('/Login')
   })
 }
 
+/* Search */
 const filteredDonations = computed(() => {
   return donations.value.filter((donation) => {
     const searchLower = searchQuery.value.toLowerCase()
@@ -149,18 +156,21 @@ const filteredDonations = computed(() => {
   })
 })
 
+/* Sort */
 const sortDonations = () => {
   if (sortOption.value === 'amount') {
     donations.value.sort((a, b) => b.amount - a.amount)
   } else if (sortOption.value === 'frequency') {
     const frequencyOrder = ['once off', 'monthly', 'annually']
-    donations.value.sort((a, b) => frequencyOrder.indexOf(a.frequency) - frequencyOrder.indexOf(b.frequency))
+    donations.value.sort(
+      (a, b) => frequencyOrder.indexOf(a.frequency) - frequencyOrder.indexOf(b.frequency),
+    )
   } else if (sortOption.value === 'createdAt') {
     donations.value.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds)
   }
 }
 
-
+/* Page */
 const paginatedDonations = computed(() => {
   const startIndex = (currentPage.value - 1) * donationsPerPage
   const endIndex = currentPage.value * donationsPerPage
@@ -183,35 +193,52 @@ const prevPage = () => {
   }
 }
 
+/* Date format */
+const formatDate = (timestamp) => {
+  if (!timestamp) return ''
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+  return date
+    .toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+    .replace(/ /g, '/')
+}
 
-
+/* Export PDF */
 const exportToPDF = () => {
   const doc = new jsPDF()
 
-  const donationsData = filteredDonations.value.map(donation => ({
+  const donationsData = filteredDonations.value.map((donation) => ({
     Amount: donation.amount,
     Frequency: donation.frequency,
-    DonatedOn: new Date(donation.createdAt.seconds * 1000).toLocaleDateString(),
+    DonatedOn: formatDate(donation.createdAt),
   }))
 
   doc.text('Donation History', 10, 10)
 
   donationsData.forEach((donation, index) => {
-    const yPosition = 20 + (index * 10)
-    doc.text(`Amount: $${donation.Amount}, Frequency: ${donation.Frequency}, Donated On: ${donation.DonatedOn}`, 10, yPosition)
+    const yPosition = 20 + index * 10
+    doc.text(
+      `Amount: $${donation.Amount}, Frequency: ${donation.Frequency}, Donated On: ${donation.DonatedOn}`,
+      10,
+      yPosition,
+    )
   })
 
   doc.save('donations.pdf')
 }
-
-
 </script>
 
 <style scoped>
+
+/* Title box */
 .title-box {
   margin-bottom: 24px;
 }
 
+/* Profile section */
 .profile-section {
   background-color: #ffeeee;
   border-top: 2px solid red;
@@ -219,6 +246,7 @@ const exportToPDF = () => {
   min-height: 70vh;
 }
 
+/* User */
 .user-icon {
   width: 120px;
   height: 120px;
@@ -235,6 +263,7 @@ const exportToPDF = () => {
   color: orange;
 }
 
+/* Info Card */
 .info-card {
   background-color: #ffffff;
   border: 2px solid;
@@ -252,12 +281,14 @@ const exportToPDF = () => {
   margin-bottom: 10px;
 }
 
+/* Search Bar */
 .search-bar {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* Search */
 .search-bar input {
   flex-grow: 1;
   border: 2px solid #d29fe8;
@@ -265,6 +296,7 @@ const exportToPDF = () => {
   padding: 5px 15px;
 }
 
+/* Sort */
 .sort-select {
   padding: 5px;
   border-radius: 5px;
@@ -284,6 +316,7 @@ const exportToPDF = () => {
   background-color: #8c56b0;
 }
 
+/* Donation */
 .donation-card {
   background-color: white;
   border: 2px solid;
@@ -309,7 +342,9 @@ const exportToPDF = () => {
   margin-right: 5px;
 }
 
+/* Page */
 .Page-controls {
   margin-bottom: 20px;
 }
 </style>
+

@@ -1,5 +1,6 @@
 <template>
   <div class="container-fluid my-5 px-4">
+
     <!-- Mission & Vision section -->
     <div class="row mb-5 align-items-center">
       <div class="col-md-4 d-flex flex-column align-items-center justify-content-center">
@@ -33,6 +34,7 @@
 
     <!-- Service section -->
     <div class="row p-4 rounded justify-content-center">
+
       <!-- Asylum Seekers -->
       <div class="col-md-5 d-flex align-items-start asylum-box">
         <div class="text-center w-100 title-box">
@@ -71,26 +73,8 @@
 </template>
 
 <style scoped>
-.section-title {
-  border-bottom: 2px solid black;
-  padding-bottom: 5px;
-  margin-bottom: 20px;
-}
 
-.bg-pink {
-  background-color: #ffecec;
-}
-
-.service-box {
-  border: 2px solid red;
-  border-radius: 20px;
-}
-
-.icon {
-  font-size: 2rem;
-  color: #333;
-}
-
+/* Layout containers */
 .container-fluid {
   margin-left: 20px;
   margin-right: 20px;
@@ -100,11 +84,27 @@
   width: 100%;
 }
 
+/* Section Titles */
+.section-title {
+  border-bottom: 2px solid black;
+  padding-bottom: 5px;
+  margin-bottom: 20px;
+}
+
+/* Image and labels */
+
 .img-fluid {
   max-width: 100%;
   height: auto;
 }
 
+.profile-label {
+  font-size: 1rem;
+  color: black;
+  user-select: none;
+}
+
+/* Info boxes */
 .asylum-box,
 .refugee-box {
   background-color: #ffecec;
@@ -119,17 +119,21 @@
   justify-content: flex-start;
 }
 
-.title-box {
-  margin-bottom: 10px;
-}
-
 .col-md-5 {
   flex: 45%;
 }
 
-.profile-label {
-  font-size: 1rem;
-  color: black;
-  user-select: none;
+/* Title inside each box */
+
+.title-box {
+  margin-bottom: 10px;
 }
+
+/* Icon styling (if applicable in future use) */
+
+.icon {
+  font-size: 2rem;
+  color: #333;
+}
+
 </style>

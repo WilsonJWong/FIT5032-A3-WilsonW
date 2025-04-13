@@ -1,11 +1,11 @@
 <template>
   <div class="container-fluid p-0 m-0">
-    <!-- Header -->
+    <!-- Header section -->
     <div class="header-bar text-center py-3">
       <strong>Mentors hub</strong>
     </div>
 
-    <!-- Search Bar -->
+    <!-- Search and sort bar section -->
     <div class="search-bar d-flex align-items-center my-4 px-3">
       <input
         type="text"
@@ -22,20 +22,20 @@
       <button class="sort-btn" @click="sortMentors">Sort</button>
     </div>
 
-    <!-- List -->
+    <!-- Mentor list section -->
     <div class="content-area px-3 py-4">
       <div
         v-for="person in paginatedMentors"
         :key="person.id"
         class="person-row d-flex align-items-center mb-4"
       >
-        <!-- Left -->
+        <!-- Left section -->
         <div class="left-section text-center me-3">
           <div class="person-icon mb-2">{{ person.name.charAt(0) }}</div>
           <div>{{ person.name }}</div>
         </div>
 
-        <!-- Middle -->
+        <!-- Middle section -->
         <div class="middle-section flex-grow-1">
           <div class="info-box">
             <p><strong>Occupation:</strong> {{ person.occupation }}</p>
@@ -64,13 +64,13 @@
         </div>
       </div>
 
-      <!-- No match -->
+      <!-- No match found -->
       <div v-if="filteredMentors.length === 0" class="text-center">
         <em>No matches found.</em>
       </div>
     </div>
 
-    <!-- Pages -->
+    <!-- Pages section -->
     <div class="Page-controls text-center mt-4">
       <button class="btn btn-primary" @click="prevPage" :disabled="currentPage === 1">
         Previous
@@ -86,7 +86,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getFirestore, collection, getDocs} from 'firebase/firestore'
+import axios from 'axios';
 
+// Variables
 const searchQuery = ref('')
 const sortOption = ref('name')
 const mentors = ref([])
@@ -94,6 +96,7 @@ const isReviewModalOpen = ref(false)
 const selectedMentor = ref(null)
 const db = getFirestore()
 
+// Fetch mentors data
 const fetchMentors = async () => {
   const querySnapshot = await getDocs(collection(db, 'mentors'))
   mentors.value = querySnapshot.docs.map((doc) => ({
@@ -106,6 +109,7 @@ onMounted(() => {
   fetchMentors()
 })
 
+// Sorting
 const sortMentors = () => {
   if (sortOption.value === 'rating') {
     mentors.value.sort((a, b) => b.rating - a.rating)
@@ -114,6 +118,7 @@ const sortMentors = () => {
   }
 }
 
+// Search
 const filteredMentors = computed(() => {
   const query = String(searchQuery.value).toLowerCase()
   return mentors.value.filter(
@@ -126,6 +131,7 @@ const filteredMentors = computed(() => {
   )
 })
 
+// Page spit
 const currentPage = ref(1)
 const mentorsPerPage = 10
 
@@ -151,6 +157,7 @@ const prevPage = () => {
   }
 }
 
+// Review and ratings
 const openReviewModal = (mentor) => {
   selectedMentor.value = mentor
   isReviewModalOpen.value = true
@@ -160,8 +167,6 @@ const closeReviewModal = () => {
   isReviewModalOpen.value = false
   selectedMentor.value = null
 }
-
-import axios from 'axios';
 
 const submitReview = async (rating) => {
   if (selectedMentor.value) {
@@ -189,6 +194,8 @@ const submitReview = async (rating) => {
 </script>
 
 <style scoped>
+
+/* Header */
 .header-bar {
   background-color: #e48d8d;
   font-size: 1.2rem;
@@ -196,6 +203,7 @@ const submitReview = async (rating) => {
   width: 99%;
 }
 
+/* Content area */
 .content-area {
   background-color: #ffe6e6;
   border-radius: 8px;
@@ -203,12 +211,14 @@ const submitReview = async (rating) => {
   width: 99%;
 }
 
+/* Person oow */
 .person-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+/* Left section */
 .left-section {
   width: 120px;
   display: flex;
@@ -229,6 +239,7 @@ const submitReview = async (rating) => {
   font-weight: bold;
 }
 
+/* Middle section */
 .middle-section {
   flex-grow: 1;
   margin: 0 15px;
@@ -242,6 +253,7 @@ const submitReview = async (rating) => {
   background-color: white;
 }
 
+/* Review button section */
 .review-btn {
   width: 100%;
   flex-grow: 1;
@@ -252,8 +264,10 @@ const submitReview = async (rating) => {
   border: none;
   border-radius: 20px;
   padding: 10px;
+  margin-top: 10px;
 }
 
+/* Search bar */
 .search-bar {
   display: flex;
   align-items: center;
@@ -267,6 +281,7 @@ const submitReview = async (rating) => {
   padding: 5px 15px;
 }
 
+/* Sort section */
 .sort-select {
   padding: 5px;
   border-radius: 5px;
@@ -282,18 +297,11 @@ const submitReview = async (rating) => {
   cursor: pointer;
 }
 
-.sort-btn:hover {
-  background-color: #8c56b0;
-}
-
-.review-btn {
-  margin-top: 10px;
-}
-
 .text-purple {
   color: #a065d0;
 }
 
+/* Review section */
 .review-modal-overlay {
   position: absolute;
   top: 0;
@@ -341,5 +349,11 @@ const submitReview = async (rating) => {
 
 .close-btn:hover {
   background-color: #d38c8c;
+}
+
+/* Page */
+.Page-controls {
+  text-align: center;
+  margin-top: 4rem;
 }
 </style>

@@ -1,6 +1,8 @@
 <template>
   <div class="container-fluid p-0 m-0">
     <div class="row g-0 full-height">
+
+      <!-- Welcome section -->
       <div class="col-md-4 d-flex justify-content-center align-items-center welcome-box">
         <div class="mb-3 w-100">
           <h2 class="text-center">Welcome!</h2>
@@ -13,6 +15,7 @@
         </div>
       </div>
 
+      <!-- Sign In section -->
       <div class="col-md-8 d-flex flex-column justify-content-center align-items-start px-5">
         <h4 class="text-center mb-4">Please sign in to continue</h4>
         <div class="mb-3 w-100">
@@ -33,15 +36,19 @@
 </template>
 
 <script setup>
+
+/* Imports */
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
 
+/* Declarations */
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const auth = getAuth()
 
+/* Signin */
 const signin = () => {
   if (!email.value || !password.value) {
     alert('Please enter both email and password.')
@@ -49,14 +56,12 @@ const signin = () => {
   }
 
   signInWithEmailAndPassword(auth, email.value, password.value)
-    .then((userCredential) => {
-      console.log('Firebase Login Successful!', userCredential.user)
-      router.push('/Profile')
-    })
-    .catch((error) => {
-      console.error('Login error:', error.code, error.message)
-      alert('Login failed: ' + error.message)
-    })
+  .then(() => {
+    router.push('/Profile')
+  })
+  .catch((error) => {
+    alert('Login failed: ' + error.message)
+  })
 }
 
 const forgotPassword = () => {
@@ -65,12 +70,13 @@ const forgotPassword = () => {
 </script>
 
 <style scoped>
+/* Layout */
 .full-height {
   min-height: 100vh;
-  height: auto;
   display: flex;
 }
 
+/* Welcome box */
 .welcome-box {
   background-color: #fce4ec;
   border: 5px solid #f8bbd0;
@@ -85,10 +91,7 @@ h2 {
   color: #ec407a;
 }
 
-.sign-up-text {
-  margin-top: auto;
-}
-
+/* Buttons */
 button {
   margin-top: 20px;
 }
@@ -96,7 +99,5 @@ button {
 .forgot-btn {
   align-self: flex-end;
   margin-top: 10px;
-  color: #007bff;
-  text-decoration: none;
 }
 </style>

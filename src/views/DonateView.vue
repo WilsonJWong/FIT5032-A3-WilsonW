@@ -32,7 +32,7 @@
                 :class="{ 'is-invalid': frequencyError }"
                 @change="validateFrequency"
               >
-                <option value="">Select Frequency</option>
+                <option value="">*** Select Frequency ***</option>
                 <option value="once off">Once off</option>
                 <option value="monthly">Monthly</option>
                 <option value="annually">Annually</option>
@@ -154,13 +154,16 @@
 </template>
 
 <script setup>
+/* Imports */
 import { ref, computed, onMounted } from 'vue'
 import { getFirestore, doc, getDoc, collection, addDoc } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
+/* Firebase setup */
 const db = getFirestore()
 const auth = getAuth()
 
+/* Declarations */
 const amount = ref('')
 const frequency = ref('')
 const name = ref('')
@@ -190,6 +193,7 @@ const frequencyErrorMessage = ref('')
 
 const showThankYouPopup = ref(false)
 
+/* Validations */
 const validateAmount = () => {
   if (!amount.value.trim()) {
     amountError.value = true
@@ -258,6 +262,7 @@ const validateCardOwner = () => {
 const validateCardNumber = () => {
   cardNumberNonNumericError.value = false
   cardNumberLengthError.value = false
+
   if (!cardNumber.value.trim()) {
     cardNumberError.value = true
     cardNumberNonNumericError.value = false
@@ -278,6 +283,7 @@ const validateCardNumber = () => {
 const validateExpiryDate = () => {
   expiryDateError.value = false
   expiryDateErrorMessage.value = ''
+
   if (!expiryDate.value.trim()) {
     expiryDateError.value = true
     expiryDateErrorMessage.value = 'Expiry date is required'
@@ -330,6 +336,7 @@ const isFormInvalid = computed(() => {
   )
 })
 
+/* Form submission */
 const sendEmail = async () => {
   try {
     if (isFormInvalid.value) {
@@ -337,18 +344,16 @@ const sendEmail = async () => {
       return
     }
 
-    const docRef = await addDoc(collection(db, 'Donations'), {
+    await addDoc(collection(db, 'Donations'), {
       donorEmail: email.value,
       amount: amount.value,
       frequency: frequency.value,
       createdAt: new Date(),
     })
 
-    console.log('Donation Submitted Successfully!', docRef.id)
     showThankYouPopup.value = true
     resetForm()
   } catch (error) {
-    console.error('Error submitting donation:', error.code, error.message)
     alert(error.message)
   }
 }
@@ -372,6 +377,7 @@ const resetForm = () => {
   frequencyError.value = false
 }
 
+/* Autofill user info */
 onMounted(async () => {
   const user = auth.currentUser
 
@@ -389,14 +395,16 @@ onMounted(async () => {
   }
 })
 
+/* Close thank you popup */
 const closeThankYouPopup = () => {
   showThankYouPopup.value = false
 }
-
 </script>
+
 
 <style>
 
+/* layout */
 .title-box {
   margin-top: 24px;
   margin-bottom: 24px;
@@ -418,11 +426,13 @@ const closeThankYouPopup = () => {
   width: 99%;
 }
 
+/* form labels */
 label {
   margin-top: 5px;
   margin-bottom: 5px;
 }
 
+/* buttons */
 .custom-btn {
   background-color: orange;
   border: none;
@@ -448,6 +458,7 @@ label {
   background-color: darkorange;
 }
 
+/* popup overlay */
 .thank-you-popup {
   position: fixed;
   top: 0;
@@ -461,6 +472,7 @@ label {
   z-index: 9999;
 }
 
+/* popup content */
 .popup-content {
   background-color: white;
   padding: 20px;

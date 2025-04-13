@@ -23,7 +23,6 @@
 
     <!-- Job Cards or Messages -->
     <div class="job-cards-box px-3 py-4 mt-2">
-
       <!-- Conditional Rendering Based on Login and Status -->
       <div v-if="!isLoggedIn">
         <p class="text-center"><strong>Please log in to view available jobs.</strong></p>
@@ -83,24 +82,34 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
-import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { getFirestore, collection, getDocs } from 'firebase/firestore'
 
+/* Declarations*/
 const searchQuery = ref('')
 const sortOption = ref('role')
 const currentPage = ref(1)
 const jobsPerPage = 10
 
+const isLoggedIn = ref(false)
+const userStatus = ref(null)
+const jobs = ref([])
+
+/* Firebase setup */
 const auth = getAuth()
 const db = getFirestore()
 
-const isLoggedIn = ref(false)
-const userStatus = ref(null)
+/* Fetch jobs from firestore */
+onMounted(async () => {
+  const querySnapshot = await getDocs(collection(db, 'Jobs'))
+  jobs.value = querySnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }))
 
-onMounted(() => {
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       isLoggedIn.value = true
-      const userDoc = await getDoc(doc(db, 'users', user.uid))
+      const userDoc = await getDocs(db, 'users', user.uid)
       if (userDoc.exists()) {
         userStatus.value = userDoc.data().status
       }
@@ -111,105 +120,7 @@ onMounted(() => {
   })
 })
 
-const jobs = ref([
-  {
-    id: 1,
-    role: 'Carpenter',
-    description:
-      'As a carpenter, you will be responsible for building and repairing wooden structures, furniture, and frameworks. You will work with both traditional tools and modern machinery to create precise and functional designs.',
-    location: 'SYD, NSW',
-    employ: 'Full-time',
-  },
-  {
-    id: 2,
-    role: 'Finance Associate',
-    description:
-      'Finance Associates provide support for the financial operations of a company, including budgeting, forecasting, and financial reporting. You will assist in analyzing financial data and preparing reports for management.',
-    location: 'SYD, NSW',
-    employ: 'Part-time',
-  },
-  {
-    id: 3,
-    role: 'Graduate Software Engineer',
-    description:
-      'As a graduate software engineer, you will be involved in the development, testing, and maintenance of software applications. You will work alongside senior engineers to enhance existing systems and develop new features.',
-    location: 'SYD, NSW',
-    employ: 'Full-time',
-  },
-  {
-    id: 4,
-    role: 'Personal Trainer',
-    description:
-      'Personal trainers design and deliver fitness programs tailored to individual clients. You will assess clients’ fitness levels, set goals, and guide them through exercises to achieve their health and fitness objectives.',
-    location: 'SYD, NSW',
-    employ: 'Casual',
-  },
-  {
-    id: 5,
-    role: 'Graduate Finance Analyst',
-    description:
-      'As a graduate finance analyst, you will assist in managing financial data, preparing financial models, and conducting analysis to support business decisions. You will work closely with other analysts and senior managers to optimize financial performance.',
-    location: 'MEL, VIC',
-    employ: 'Full-time',
-  },
-  {
-    id: 6,
-    role: 'M&A Consultant',
-    description:
-      'M&A consultants advise companies on mergers and acquisitions, providing insights into potential transactions, financial evaluations, and strategic recommendations. You will work with various teams to facilitate successful deals.',
-    location: 'MEL, VIC',
-    employ: 'Part-time',
-  },
-  {
-    id: 7,
-    role: 'Technology Risk (Senior Con)',
-    description:
-      'Technology Risk Consultants help organizations manage and mitigate risks related to their technology infrastructure. You will assess security risks, evaluate compliance standards, and recommend solutions to safeguard the company’s digital assets.',
-    location: 'MEL, VIC',
-    employ: 'Full-time',
-  },
-  {
-    id: 8,
-    role: 'Hairdresser',
-    description:
-      'Hairdressers provide styling, cutting, and coloring services to clients, ensuring that each hairstyle meets the customer’s needs. You will also provide hair care advice and recommend products based on clients’ hair types.',
-    location: 'MEL, VIC',
-    employ: 'Casual',
-  },
-  {
-    id: 9,
-    role: 'Waitress',
-    description:
-      'As a waitress, you will take orders, serve food and beverages, and ensure that customers have an enjoyable dining experience. You will also be responsible for maintaining cleanliness in your designated area and handling payments.',
-    location: 'BNE, QLD',
-    employ: 'Full-time',
-  },
-  {
-    id: 10,
-    role: 'Architecture',
-    description:
-      'Architects design and plan the construction of buildings and structures. You will create detailed blueprints, select materials, and work with construction teams to bring your designs to life, ensuring functionality and aesthetic appeal.',
-    location: 'BNE, QLD',
-    employ: 'Part-time',
-  },
-  {
-    id: 11,
-    role: 'Data Engineer',
-    description:
-      'Data engineers design and implement systems to collect, store, and process large sets of data. You will build pipelines, ensure data integrity, and optimize data systems for ease of use and efficiency in analysis.',
-    location: 'BNE, QLD',
-    employ: 'Full-time',
-  },
-  {
-    id: 12,
-    role: 'Full Stack Developer',
-    description:
-      'Full stack developers are responsible for both the front-end and back-end development of web applications. You will design user interfaces, implement server-side logic, and integrate various components into cohesive, efficient systems.',
-    location: 'BNE, QLD',
-    employ: 'Casual',
-  },
-])
-
+/* Filter jobs */
 const filteredJobs = computed(() => {
   const query = searchQuery.value.toLowerCase()
   return jobs.value.filter(
@@ -221,6 +132,7 @@ const filteredJobs = computed(() => {
   )
 })
 
+/* Sort jobs */
 const sortJobs = () => {
   if (sortOption.value === 'location') {
     jobs.value.sort((a, b) => a.location.localeCompare(b.location))
@@ -231,7 +143,7 @@ const sortJobs = () => {
   }
 }
 
-// Page for jobs
+/* Page split */
 const paginatedJobs = computed(() => {
   const startIndex = (currentPage.value - 1) * jobsPerPage
   const endIndex = currentPage.value * jobsPerPage
@@ -256,6 +168,7 @@ const prevPage = () => {
 </script>
 
 <style scoped>
+/* Header */
 .header-bar {
   background-color: #e48d8d;
   font-size: 1.2rem;
@@ -263,6 +176,7 @@ const prevPage = () => {
   width: 99%;
 }
 
+/* Search bar and sorting controls */
 .search-bar {
   display: flex;
   align-items: center;
@@ -295,10 +209,7 @@ const prevPage = () => {
   background-color: #8c56b0;
 }
 
-.text-purple {
-  color: #a065d0;
-}
-
+/* Job cards container */
 .job-cards-box {
   background-color: #d29fe8;
   border-radius: 10px;
@@ -307,6 +218,7 @@ const prevPage = () => {
   margin: auto;
 }
 
+/* Job cards */
 .job-card .role-title,
 .job-card .desc-title,
 .job-card .apply-title {
@@ -320,7 +232,7 @@ const prevPage = () => {
   background-color: transparent;
   margin-bottom: 10px;
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -335,6 +247,16 @@ const prevPage = () => {
   text-overflow: ellipsis;
 }
 
+.view-more {
+  font-style: italic;
+  font-weight: bold;
+  color: black;
+  text-decoration: underline;
+  align-self: flex-end;
+  margin-top: 10px;
+}
+
+/* Headings */
 .role-box,
 .desc-box,
 .apply-box {
@@ -361,20 +283,13 @@ const prevPage = () => {
   overflow-y: auto;
   text-align: left;
 }
+
 .desc-box p {
   font-weight: normal;
   width: 100%;
 }
 
-.view-more {
-  font-style: italic;
-  font-weight: bold;
-  color: black;
-  text-decoration: underline;
-  align-self: flex-end;
-  margin-top: 10px;
-}
-
+/* Apply Button */
 .apply-btn {
   background-color: orange;
   color: white;
@@ -394,6 +309,7 @@ const prevPage = () => {
   margin-right: 20px;
 }
 
+/* Page controls */
 .Page-controls {
   margin-bottom: 20px;
 }

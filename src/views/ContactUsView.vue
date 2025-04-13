@@ -133,12 +133,12 @@
       </div>
 
       <!-- Map -->
-      <div class="col-md-8">
+      <div class="col-md-8 px-4">
         <div id="live-map" class="live-map"></div>
       </div>
 
       <!-- Location list -->
-      <div class="col-md-4">
+      <div class="col-md-4 px-4">
         <div class="location-list">
           <h5 class="text-center mb-3">Support Centre Locations</h5>
           <div
@@ -155,24 +155,36 @@
       </div>
 
       <!-- Closet location button -->
-      <div class="row px-4 mb-3">
-        <div class="col-12">
-          <button @click="findClosestLocation" class="closest-btn">
-            Find Closest Support Center
-          </button>
-        </div>
+      <div class="px-4">
+        <button @click="findClosestLocation" class="closest-btn w-100">
+          Find Closest Support Center
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+/* Imports */
 import { ref, computed, onMounted, watch } from 'vue'
 import { getAuth } from 'firebase/auth'
-import { getFirestore, doc, getDoc, getDocs, collection, addDoc } from 'firebase/firestore'
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  addDoc,
+} from 'firebase/firestore'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import axios from 'axios'
 
+/* Firebase setup */
+const auth = getAuth()
+const db = getFirestore()
+
+/* Contacts */
 const contacts = [
   {
     id: 1,
@@ -188,9 +200,7 @@ const contacts = [
   },
 ]
 
-const auth = getAuth()
-const db = getFirestore()
-
+/* Declarations */
 const email = ref('')
 const name = ref('')
 const inquiry = ref('')
@@ -209,6 +219,28 @@ const map = ref(null)
 const markers = ref([])
 const searchQuery = ref('')
 
+/* Computed properties */
+const isFormInvalid = computed(() => {
+  return !(
+    email.value &&
+    name.value &&
+    inquiry.value &&
+    !emailError.value &&
+    !nameError.value &&
+    !inquiryError.value
+  )
+})
+
+const filteredLocations = computed(() => {
+  const query = searchQuery.value.toLowerCase()
+  return locations.value.filter(
+    (loc) =>
+      loc.name.toLowerCase().includes(query) ||
+      loc.address.toLowerCase().includes(query)
+  )
+})
+
+/* Form validation functions */
 const validateEmail = () => {
   if (!email.value) {
     emailError.value = true
@@ -251,17 +283,7 @@ const validateInquiry = () => {
   }
 }
 
-const isFormInvalid = computed(() => {
-  return !(
-    email.value &&
-    name.value &&
-    inquiry.value &&
-    !emailError.value &&
-    !nameError.value &&
-    !inquiryError.value
-  )
-})
-
+/* Form submission */
 const sendEmail = async () => {
   validateEmail()
   validateName()
@@ -288,6 +310,7 @@ const sendEmail = async () => {
   }
 }
 
+/* Map initialisation */
 onMounted(async () => {
   const user = auth.currentUser
   map.value = L.map('live-map')
@@ -314,6 +337,7 @@ onMounted(async () => {
   }
 })
 
+/* Location & map utilities */
 const fetchLocations = async () => {
   const querySnapshot = await getDocs(collection(db, 'Locations'))
   locations.value = querySnapshot.docs.map((doc) => ({
@@ -323,16 +347,10 @@ const fetchLocations = async () => {
   updateMapMarkers()
 }
 
-const filteredLocations = computed(() => {
-  const query = searchQuery.value.toLowerCase()
-  return locations.value.filter(
-    (loc) => loc.name.toLowerCase().includes(query) || loc.address.toLowerCase().includes(query),
-  )
-})
-
 const updateMapMarkers = () => {
   markers.value.forEach((marker) => map.value.removeLayer(marker))
   markers.value = []
+
   filteredLocations.value.forEach((loc) => {
     const marker = L.marker([loc.latitude, loc.longitude])
       .addTo(map.value)
@@ -341,24 +359,30 @@ const updateMapMarkers = () => {
   })
 }
 
-watch(searchQuery, () => {
-  updateMapMarkers()
-})
-
-const findClosestLocation = () => {
+/* Closest location */
+const findClosestLocation = async () => {
   if (navigator.geolocation) {
-    // Get user's current location
-    navigator.geolocation.getCurrentPosition((position) => {
+    navigator.geolocation.getCurrentPosition(async (position) => {
       const userLat = position.coords.latitude
       const userLng = position.coords.longitude
 
-      // Find the closest location
-      const closestLocation = getClosestLocation(userLat, userLng)
+      try {
+        const response = await axios.post(
+          'https://findclosestlocation-ulawfedg4a-uc.a.run.app',
+          {
+            latitude: userLat,
+            longitude: userLng,
+          }
+        )
 
-      if (closestLocation) {
-        // Update map to show closest location
-        map.value.setView([closestLocation.latitude, closestLocation.longitude], 13)
-        map.value.zoomIn(13)
+        if (response.status === 200 && response.data.closestLocation) {
+          const closest = response.data.closestLocation
+          map.value.setView([closest.latitude, closest.longitude], 13)
+        } else {
+          console.error('No closest location found.')
+        }
+      } catch (error) {
+        console.error('Error finding closest location:', error.response || error.message)
       }
     })
   } else {
@@ -366,37 +390,12 @@ const findClosestLocation = () => {
   }
 }
 
-const getClosestLocation = (userLat, userLng) => {
-  let closestLocation = null
-  let minDistance = Infinity
+/* Watcher */
+watch(searchQuery, () => {
+  updateMapMarkers()
+})
 
-  locations.value.forEach((loc) => {
-    const distance = haversineDistance(userLat, userLng, loc.latitude, loc.longitude)
-    if (distance < minDistance) {
-      minDistance = distance
-      closestLocation = loc
-    }
-  })
-
-  return closestLocation
-}
-
-const haversineDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 6371
-  const dLat = toRad(lat2 - lat1)
-  const dLng = toRad(lng2 - lng1)
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  const distance = R * c
-  return distance
-}
-
-const toRad = (degree) => {
-  return degree * (Math.PI / 180)
-}
-
+/* Utility methods */
 const resetForm = () => {
   inquiry.value = ''
   inquiryError.value = false
@@ -405,25 +404,57 @@ const resetForm = () => {
 const closeThankYouPopup = () => {
   showThankYouPopup.value = false
 }
+
 </script>
 
 <style scoped>
+
+/* General spacing and typography */
 .title-box {
   margin-top: 24px;
   margin-bottom: 24px;
 }
 
+.section-title {
+  font-weight: bold;
+  border-bottom: 2px solid black;
+  padding-bottom: 5px;
+}
+
+/* Inquiry section */
 .inquiry-section {
   background-color: #ffeeee;
   border-top: 2px solid red;
   border-bottom: 2px solid red;
+  margin-top: 60px;
 }
 
+.inquiry-section .row {
+  display: flex;
+  align-items: stretch;
+}
+
+.inquiry-section .form-control {
+  flex-grow: 1;
+}
+
+/* Form validation */
+.is-invalid {
+  border-color: red;
+}
+
+.invalid-feedback {
+  color: red;
+  font-size: 0.9rem;
+}
+
+/* Arrow styling */
 .large-arrow {
   font-size: 6rem;
   color: #999;
 }
 
+/* Submit button styles */
 .submit-btn {
   background-color: orange;
   border: none;
@@ -432,10 +463,6 @@ const closeThankYouPopup = () => {
   border-radius: 10px;
   font-weight: bold;
   transition: background-color 0.3s ease;
-}
-
-.submit-btn-active {
-  background-color: orange;
 }
 
 .submit-btn-disabled {
@@ -447,12 +474,7 @@ const closeThankYouPopup = () => {
   background-color: darkorange;
 }
 
-.section-title {
-  font-weight: bold;
-  border-bottom: 2px solid black;
-  padding-bottom: 5px;
-}
-
+/* Contact section */
 .contact-card-wrapper {
   background-color: #ffe6e6;
   border-radius: 10px;
@@ -467,6 +489,13 @@ const closeThankYouPopup = () => {
   flex-grow: 1;
 }
 
+.contact-col,
+.location-col {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Location section */
 .location-card {
   border: 2px solid red;
   border-radius: 20px;
@@ -479,49 +508,54 @@ const closeThankYouPopup = () => {
   justify-content: center;
 }
 
-.contact-location-row {
-  display: flex;
-  align-items: stretch;
-}
-
-.contact-col,
-.location-col {
-  display: flex;
-  flex-direction: column;
-}
-
-.location-inner {
-  flex: 1;
-  display: flex;
-  align-items: stretch;
-}
-
-.is-invalid {
-  border-color: red;
-}
-
-.invalid-feedback {
-  color: red;
-  font-size: 0.9rem;
-}
-
-.inquiry-section .row {
-  display: flex;
-  align-items: stretch;
-}
-
-.inquiry-section .form-control {
-  flex-grow: 1;
-}
-
-.inquiry-section .col-md-7 {
-  margin-top: 60px;
-}
-
 .location-image {
   height: 100%;
 }
 
+.live-map {
+  width: 100%;
+  height: 500px;
+  border: 2px solid red;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.location-list {
+  height: 500px;
+  overflow-y: auto;
+  background-color: #fff5f5;
+  border: 2px solid red;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.location-entry {
+  background-color: #fff;
+}
+
+/* Closest button */
+.closest-btn {
+  width: 100%;
+  flex-grow: 1;
+  margin: 10px 0;
+  background-color: orange;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  padding: 10px;
+}
+
+/* Search bar */
+.search-bar input {
+  flex-grow: 1;
+  border: 2px solid #d29fe8;
+  border-radius: 20px;
+  padding: 5px 15px;
+}
+
+/* Thank you popup */
 .thank-you-popup {
   position: fixed;
   top: 0;
@@ -556,46 +590,4 @@ const closeThankYouPopup = () => {
   background-color: darkorange;
 }
 
-.live-map {
-  width: 100%;
-  height: 600px;
-  border: 2px solid red;
-  border-radius: 10px;
-  margin-top: 10px;
-  margin-left: 15px;
-}
-
-.location-list {
-  height: 600px;
-  overflow-y: auto;
-  background-color: #fff5f5;
-  border: 2px solid red;
-  border-radius: 10px;
-  padding: 10px;
-  margin-top: 10px;
-  margin-right: 15px;
-}
-
-.location-entry {
-  background-color: #fff;
-}
-
-.search-bar input {
-  flex-grow: 1;
-  border: 2px solid #d29fe8;
-  border-radius: 20px;
-  padding: 5px 15px;
-}
-
-.closest-btn {
-  width: 100%;
-  flex-grow: 1;
-  margin: 5px 0;
-  background-color: orange;
-  color: white;
-  font-weight: bold;
-  border: none;
-  border-radius: 20px;
-  padding: 10px;
-}
 </style>

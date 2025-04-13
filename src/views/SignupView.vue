@@ -84,81 +84,96 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
-import { useRouter } from 'vue-router'
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
 
-const email = ref('')
-const firstName = ref('')
-const lastName = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const gender = ref('')
-const status = ref('')
+  /* imports */
+  import { ref } from 'vue'
+  import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
+  import { useRouter } from 'vue-router'
+  import { getFirestore, doc, setDoc } from 'firebase/firestore'
 
-const router = useRouter()
-const auth = getAuth()
-const db = getFirestore()
+  /* declarations */
+  const email = ref('')
+  const firstName = ref('')
+  const lastName = ref('')
+  const password = ref('')
+  const confirmPassword = ref('')
+  const gender = ref('')
+  const status = ref('')
 
-const signUp = async () => {
-  if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match.')
-    return
+  const router = useRouter()
+  const auth = getAuth()
+  const db = getFirestore()
+
+  /* sign-up and valdations*/
+  const signUp = async () => {
+    if (!email.value || !firstName.value || !lastName.value || !password.value || !confirmPassword.value || !gender.value || !status.value) {
+      alert('Please fill in all the fields.')
+      return
+    }
+
+    const namePattern = /^[A-Za-z\s]+$/;
+    if (!namePattern.test(firstName.value) || !namePattern.test(lastName.value)) {
+      alert('First and Last names must contain only alphabetic characters.')
+      return
+    }
+    if (password.value !== confirmPassword.value) {
+      alert('Passwords do not match.')
+      return
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
+      const user = userCredential.user
+
+      await setDoc(doc(db, 'users', user.uid), {
+        email: email.value,
+        firstName: firstName.value,
+        lastName: lastName.value,
+        gender: gender.value,
+        status: status.value,
+        createdAt: new Date(),
+      })
+
+      console.log('Firebase Register Successful!', user)
+      router.push('/Login')
+    } catch (error) {
+      console.error('Error registering:', error.code, error.message)
+      alert(error.message)
+    }
   }
-
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value)
-    const user = userCredential.user
-
-    await setDoc(doc(db, 'users', user.uid), {
-      email: email.value,
-      firstName: firstName.value,
-      lastName: lastName.value,
-      gender: gender.value,
-      status: status.value,
-      createdAt: new Date(),
-    })
-
-    console.log('Firebase Register Successful!', user)
-    router.push('/Login')
-  } catch (error) {
-    console.error('Error registering:', error.code, error.message)
-    alert(error.message)
-  }
-}
-
 </script>
 
+
+
 <style scoped>
-.full-height {
-  min-height: 100vh;
-  height: auto;
-  display: flex;
-}
 
-.welcome-box {
-  background-color: #fce4ec;
-  border: 5px solid #f8bbd0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  text-align: center;
-}
+  /* full-height */
+  .full-height {
+    min-height: 100vh;
+    height: auto;
+    display: flex;
+  }
 
-h2 {
-  color: #ec407a;
-}
+  /* welcome-box */
+  .welcome-box {
+    background-color: #fce4ec;
+    border: 5px solid #f8bbd0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+  }
 
-button {
-  margin-top: 20px;
-}
+  /* heading styles */
+  h2 {
+    color: #ec407a;
+  }
 
-.forgot-btn {
-  align-self: flex-end;
-  margin-top: 10px;
-  color: #007bff;
-  text-decoration: none;
-}
+  /* button styles */
+  button {
+    margin-top: 20px;
+  }
+
 </style>
+
